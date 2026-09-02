@@ -8,7 +8,7 @@ export default function Home() {
   const overall = overallProgress(modules, completed);
 
   return (
-    <div className="mx-auto max-w-5xl animate-fade-in px-6 py-10">
+    <div className="mx-auto max-w-5xl animate-fade-in px-4 py-6 sm:px-6 sm:py-10">
       <div className="mb-10">
         <p className="mb-2 text-sm font-medium uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
           Интерактивный курс · с нуля

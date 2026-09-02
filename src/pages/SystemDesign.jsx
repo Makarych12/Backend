@@ -38,20 +38,21 @@ const TASKS = [
 export default function SystemDesign() {
   const [activeTaskId, setActiveTaskId] = useState('ecommerce');
   const [nodes, setNodes] = useState([
-    { id: 'node_1', type: 'client', label: 'Клиент (Web/App)', x: 40, y: 150 },
-    { id: 'node_2', type: 'lb', label: 'Load Balancer (Nginx)', x: 260, y: 150 },
-    { id: 'node_3', type: 'api', label: 'FastAPI Backend', x: 480, y: 150 },
-    { id: 'node_4', type: 'db', label: 'PostgreSQL Database', x: 720, y: 70 },
-    { id: 'node_5', type: 'cache', label: 'Redis Cache', x: 720, y: 230 },
+    { id: 'node_1_client', type: 'client', label: 'Клиент (Web/App)', x: 20, y: 140 },
+    { id: 'node_2_lb', type: 'lb', label: 'Load Balancer (Nginx)', x: 190, y: 140 },
+    { id: 'node_3_api', type: 'api', label: 'FastAPI Backend', x: 360, y: 140 },
+    { id: 'node_4_db', type: 'db', label: 'PostgreSQL Database', x: 530, y: 60 },
+    { id: 'node_5_cache', type: 'cache', label: 'Redis Cache', x: 530, y: 220 },
   ]);
   const [connections, setConnections] = useState([
-    { id: 'c1', from: 'node_1', to: 'node_2', protocol: 'HTTPS' },
-    { id: 'c2', from: 'node_2', to: 'node_3', protocol: 'HTTP' },
-    { id: 'c3', from: 'node_3', to: 'node_4', protocol: 'SQL' },
-    { id: 'c4', from: 'node_3', to: 'node_5', protocol: 'Redis TCP' },
+    { id: 'c1', from: 'node_1_client', to: 'node_2_lb', protocol: 'HTTPS' },
+    { id: 'c2', from: 'node_2_lb', to: 'node_3_api', protocol: 'HTTP' },
+    { id: 'c3', from: 'node_3_api', to: 'node_4_db', protocol: 'SQL' },
+    { id: 'c4', from: 'node_3_api', to: 'node_5_cache', protocol: 'Redis TCP' },
   ]);
 
-  const [selectedNodeForConnect, setSelectedNodeForConnect] = useState(null);
+  const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const [connectMode, setConnectMode] = useState(false);
   const [draggingNodeId, setDraggingNodeId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
@@ -71,13 +72,13 @@ export default function SystemDesign() {
     const blockMeta = BLOCK_TYPES.find((b) => b.type === blockType);
     setNodes((prev) => {
       const newId = `node_${prev.length + 1}_${blockType}`;
-      const offset = (prev.length * 25) % 150;
+      const offset = (prev.length * 20) % 120;
       const newNode = {
         id: newId,
         type: blockType,
         label: blockMeta.label,
-        x: 340 + offset,
-        y: 100 + offset,
+        x: 100 + offset,
+        y: 80 + offset,
       };
       return [...prev, newNode];
     });
@@ -87,18 +88,19 @@ export default function SystemDesign() {
   const deleteNode = (nodeId) => {
     setNodes((prev) => prev.filter((n) => n.id !== nodeId));
     setConnections((prev) => prev.filter((c) => c.from !== nodeId && c.to !== nodeId));
-    if (selectedNodeForConnect === nodeId) setSelectedNodeForConnect(null);
+    if (selectedNodeId === nodeId) setSelectedNodeId(null);
   };
 
-  // Клик по блоку для создания связи
-  const handleNodeClick = (nodeId) => {
-    if (!selectedNodeForConnect) {
-      setSelectedNodeForConnect(nodeId);
-    } else if (selectedNodeForConnect === nodeId) {
-      setSelectedNodeForConnect(null);
-    } else {
-      // Создаём соединение
-      const sourceId = selectedNodeForConnect;
+  // Удаление соединения
+  const deleteConnection = (connId) => {
+    setConnections((prev) => prev.filter((c) => c.id !== connId));
+  };
+
+  // Клик / Тап по блоку
+  const handleNodeSelect = (nodeId) => {
+    if (connectMode && selectedNodeId && selectedNodeId !== nodeId) {
+      // Соединяем два блока
+      const sourceId = selectedNodeId;
       setConnections((prev) => {
         const exists = prev.some(
           (c) => (c.from === sourceId && c.to === nodeId) || (c.from === nodeId && c.to === sourceId)
@@ -112,34 +114,77 @@ export default function SystemDesign() {
         };
         return [...prev, newConn];
       });
-      setSelectedNodeForConnect(null);
+      setConnectMode(false);
+      setSelectedNodeId(null);
+    } else {
+      setSelectedNodeId((prev) => (prev === nodeId ? null : nodeId));
+      setConnectMode(false);
     }
   };
 
-  // Перетаскивание блоков
-  const handleMouseDown = (e, node) => {
-    e.stopPropagation();
+  // Клик / Тап по холсту для перемещения выбранного блока
+  const handleCanvasClick = (e) => {
+    if (!selectedNodeId || !canvasRef.current || connectMode) return;
+    const canvasRect = canvasRef.current.getBoundingClientRect();
+    const clickX = e.clientX - canvasRect.left - 70;
+    const clickY = e.clientY - canvasRect.top - 30;
+
+    const clampedX = Math.max(10, Math.min(canvasRect.width - 150, clickX));
+    const clampedY = Math.max(10, Math.min(canvasRect.height - 70, clickY));
+
+    setNodes((prev) =>
+      prev.map((n) => (n.id === selectedNodeId ? { ...n, x: clampedX, y: clampedY } : n))
+    );
+  };
+
+  // Drag-and-Drop (Мышь + Touch)
+  const startDrag = (clientX, clientY, node) => {
     setDraggingNodeId(node.id);
+    if (!canvasRef.current) return;
     const canvasRect = canvasRef.current.getBoundingClientRect();
     setDragOffset({
-      x: e.clientX - canvasRect.left - node.x,
-      y: e.clientY - canvasRect.top - node.y,
+      x: clientX - canvasRect.left - node.x,
+      y: clientY - canvasRect.top - node.y,
     });
   };
 
-  const handleMouseMove = (e) => {
+  const moveDrag = (clientX, clientY) => {
     if (!draggingNodeId || !canvasRef.current) return;
     const canvasRect = canvasRef.current.getBoundingClientRect();
-    const newX = Math.max(10, Math.min(canvasRect.width - 160, e.clientX - canvasRect.left - dragOffset.x));
-    const newY = Math.max(10, Math.min(canvasRect.height - 80, e.clientY - canvasRect.top - dragOffset.y));
+    const newX = Math.max(10, Math.min(canvasRect.width - 150, clientX - canvasRect.left - dragOffset.x));
+    const newY = Math.max(10, Math.min(canvasRect.height - 70, clientY - canvasRect.top - dragOffset.y));
 
     setNodes((prev) =>
       prev.map((n) => (n.id === draggingNodeId ? { ...n, x: newX, y: newY } : n))
     );
   };
 
-  const handleMouseUp = () => {
+  const endDrag = () => {
     setDraggingNodeId(null);
+  };
+
+  // Mouse handlers
+  const handleMouseDown = (e, node) => {
+    e.stopPropagation();
+    startDrag(e.clientX, e.clientY, node);
+  };
+
+  const handleMouseMove = (e) => {
+    moveDrag(e.clientX, e.clientY);
+  };
+
+  // Touch handlers
+  const handleTouchStart = (e, node) => {
+    e.stopPropagation();
+    if (e.touches && e.touches[0]) {
+      startDrag(e.touches[0].clientX, e.touches[0].clientY, node);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (e.touches && e.touches[0]) {
+      moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+    }
   };
 
   // AI Оценка архитектуры
@@ -196,25 +241,25 @@ export default function SystemDesign() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl animate-fade-in px-4 py-8 sm:px-6 sm:py-10">
+    <div className="mx-auto max-w-6xl animate-fade-in px-3 py-6 sm:px-6 sm:py-10">
       {/* Заголовок */}
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <div className="flex items-center gap-2.5">
             <span className="text-3xl">🏗️</span>
-            <h1 className="text-2xl font-bold sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-xl font-bold sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
               System Design Sandbox
             </h1>
           </div>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+          <p className="mt-1 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
             Интерактивный конструктор архитектуры систем: проектируй сервисы, соединяй блоки и оценивай с AI.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setShowKeyModal(true)}
-            className="rounded-xl border px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--bg-hover)]"
+            className="min-h-[38px] rounded-xl border px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--bg-hover)]"
             style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
           >
             ⚙️ API-ключ
@@ -222,7 +267,7 @@ export default function SystemDesign() {
           <button
             onClick={handleEvaluateAi}
             disabled={aiLoading || nodes.length === 0}
-            className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white shadow-lg transition hover:brightness-110 disabled:opacity-50"
+            className="min-h-[38px] flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white shadow-lg transition hover:brightness-110 disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)' }}
           >
             <span>🤖</span>
@@ -232,7 +277,7 @@ export default function SystemDesign() {
       </div>
 
       {/* Выбор задачи */}
-      <div className="mb-6 rounded-2xl border p-4" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border)' }}>
+      <div className="mb-6 rounded-2xl border p-3.5 sm:p-4" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border)' }}>
         <div className="mb-3 flex flex-wrap gap-2">
           {TASKS.map((t) => (
             <button
@@ -241,7 +286,7 @@ export default function SystemDesign() {
                 setActiveTaskId(t.id);
                 setAiFeedback(null);
               }}
-              className="rounded-xl px-3.5 py-1.5 text-xs font-semibold transition"
+              className="min-h-[36px] rounded-xl px-3 py-1.5 text-xs font-semibold transition"
               style={{
                 background: activeTaskId === t.id ? 'var(--accent)' : 'var(--bg)',
                 color: activeTaskId === t.id ? '#ffffff' : 'var(--text-secondary)',
@@ -254,7 +299,7 @@ export default function SystemDesign() {
         </div>
 
         <div className="rounded-xl p-3 text-xs leading-relaxed" style={{ background: 'var(--bg)', color: 'var(--text-secondary)' }}>
-          <p className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>
+          <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>
             🎯 Технические требования: {activeTask.requirements}
           </p>
           <p className="mt-1 italic" style={{ color: 'var(--text-muted)' }}>
@@ -263,28 +308,70 @@ export default function SystemDesign() {
         </div>
       </div>
 
+      {/* Панель управления действиями выбранного блока */}
+      {selectedNodeId && (
+        <div
+          className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border p-3 animate-fade-in text-xs"
+          style={{ background: 'color-mix(in srgb, var(--accent) 12%, var(--bg-secondary))', borderColor: 'var(--accent)' }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="font-bold" style={{ color: 'var(--text-primary)' }}>
+              Выбран: {nodes.find((n) => n.id === selectedNodeId)?.label}
+            </span>
+            <span className="hidden text-[11px] sm:inline" style={{ color: 'var(--text-muted)' }}>
+              (Тапни на холст, чтобы переместить блок сюда)
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              onClick={() => setConnectMode(true)}
+              className="min-h-[32px] rounded-lg px-2.5 py-1 font-semibold text-white transition"
+              style={{ background: connectMode ? '#f59e0b' : 'var(--accent)' }}
+            >
+              {connectMode ? '👉 Нажми на цель' : '🔗 Соединить стрелкой'}
+            </button>
+            <button
+              onClick={() => deleteNode(selectedNodeId)}
+              className="min-h-[32px] rounded-lg border border-red-500/40 bg-red-500/10 px-2.5 py-1 font-semibold text-red-500 transition"
+            >
+              ✕ Удалить
+            </button>
+            <button
+              onClick={() => {
+                setSelectedNodeId(null);
+                setConnectMode(false);
+              }}
+              className="min-h-[32px] rounded-lg border px-2.5 py-1 font-medium transition"
+              style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+            >
+              Снять выбор
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Основная рабочая область: Палитра слева + Холст справа */}
       <div className="grid gap-4 lg:grid-cols-4">
         {/* Палитра блоков */}
-        <div className="space-y-2 rounded-2xl border p-4 lg:col-span-1" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border)' }}>
-          <h2 className="mb-3 text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-            Палитра компонентов:
+        <div className="space-y-2 rounded-2xl border p-3.5 sm:p-4 lg:col-span-1" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border)' }}>
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+            Палитра блоков:
           </h2>
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1">
             {BLOCK_TYPES.map((block) => (
               <button
                 key={block.type}
                 onClick={() => addBlockToCanvas(block.type)}
-                className="flex items-center gap-2 rounded-xl border p-2.5 text-left text-xs font-medium transition hover:scale-[1.02] hover:shadow-md"
+                className="min-h-[44px] flex items-center gap-2 rounded-xl border p-2 text-left text-xs font-medium transition hover:scale-[1.02] hover:shadow-md"
                 style={{
                   background: 'var(--bg)',
                   borderColor: 'var(--border)',
                   color: 'var(--text-primary)',
                 }}
               >
-                <span className="text-xl">{block.icon}</span>
+                <span className="text-lg sm:text-xl">{block.icon}</span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-bold">{block.label}</p>
+                  <p className="truncate font-bold text-[11px] sm:text-xs">{block.label}</p>
                   <p className="truncate text-[10px]" style={{ color: 'var(--text-muted)' }}>
                     + Добавить
                   </p>
@@ -293,17 +380,20 @@ export default function SystemDesign() {
             ))}
           </div>
 
-          <div className="pt-3 border-t text-[11px] leading-relaxed" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-            ℹ️ <strong>Инструкция:</strong> Нажми на компонент для добавления на холст. Перетаскивай мышью. Чтобы соединить два блока стрелкой: нажми на первый, затем на второй блок!
+          <div className="pt-3 border-t text-[11px] leading-relaxed hidden sm:block" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+            ℹ️ <strong>Управление:</strong> Перетаскивай мышью или пальцем. Либо нажми на блок и тапни на холст для перемещения.
           </div>
         </div>
 
         {/* Интерактивный холст (Canvas) */}
         <div
           ref={canvasRef}
+          onClick={handleCanvasClick}
           onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          className="relative h-[480px] overflow-hidden rounded-2xl border select-none lg:col-span-3"
+          onMouseUp={endDrag}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={endDrag}
+          className="relative h-[380px] sm:h-[480px] overflow-hidden rounded-2xl border select-none lg:col-span-3 touch-none"
           style={{
             background: 'var(--bg)',
             borderColor: 'var(--border)',
@@ -323,10 +413,10 @@ export default function SystemDesign() {
               const toNode = nodes.find((n) => n.id === conn.to);
               if (!fromNode || !toNode) return null;
 
-              const x1 = fromNode.x + 75;
-              const y1 = fromNode.y + 35;
-              const x2 = toNode.x + 75;
-              const y2 = toNode.y + 35;
+              const x1 = fromNode.x + 65;
+              const y1 = fromNode.y + 30;
+              const x2 = toNode.x + 65;
+              const y2 = toNode.y + 30;
 
               return (
                 <g key={conn.id}>
@@ -357,28 +447,32 @@ export default function SystemDesign() {
 
           {/* Узлы (Блоки на холсте) */}
           {nodes.map((node) => {
-            const isConnecting = selectedNodeForConnect === node.id;
+            const isSelected = selectedNodeId === node.id;
             const meta = BLOCK_TYPES.find((b) => b.type === node.type) || BLOCK_TYPES[0];
 
             return (
               <div
                 key={node.id}
                 onMouseDown={(e) => handleMouseDown(e, node)}
-                onClick={() => handleNodeClick(node.id)}
-                className={`absolute flex w-40 cursor-move flex-col rounded-xl border p-2.5 shadow-md transition-shadow duration-150 ${
-                  isConnecting ? 'ring-2 ring-[var(--accent)] ring-offset-2' : ''
+                onTouchStart={(e) => handleTouchStart(e, node)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNodeSelect(node.id);
+                }}
+                className={`absolute flex w-36 sm:w-40 cursor-pointer select-none flex-col rounded-xl border p-2 sm:p-2.5 shadow-md transition-shadow duration-150 ${
+                  isSelected ? 'ring-2 ring-[var(--accent)] ring-offset-2' : ''
                 }`}
                 style={{
                   left: `${node.x}px`,
                   top: `${node.y}px`,
                   background: 'var(--bg-secondary)',
-                  borderColor: isConnecting ? 'var(--accent)' : 'var(--border)',
+                  borderColor: isSelected ? 'var(--accent)' : 'var(--border)',
                 }}
               >
                 <div className="flex items-center justify-between gap-1">
                   <div className="flex items-center gap-1.5 truncate">
                     <span className="text-base">{meta.icon}</span>
-                    <span className="truncate text-xs font-bold" style={{ color: 'var(--text-primary)' }}>
+                    <span className="truncate text-[11px] sm:text-xs font-bold" style={{ color: 'var(--text-primary)' }}>
                       {node.label}
                     </span>
                   </div>
@@ -387,37 +481,64 @@ export default function SystemDesign() {
                       e.stopPropagation();
                       deleteNode(node.id);
                     }}
-                    className="h-4 w-4 rounded text-[10px] text-red-500 hover:bg-red-500/10"
-                    title="Удалить блок"
+                    className="h-5 w-5 rounded text-xs text-red-500 hover:bg-red-500/10 flex items-center justify-center"
+                    title="Удалить"
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className="mt-1 flex items-center justify-between text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                  <span>{isConnecting ? '👉 Выбери цель' : 'Клик: соединить'}</span>
-                  <span className="font-mono text-[9px] opacity-60">{node.type}</span>
+                <div className="mt-1 flex items-center justify-between text-[9px] sm:text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                  <span>{isSelected ? (connectMode ? '👉 Цель' : 'Выбран') : 'Тап: опции'}</span>
+                  <span className="font-mono opacity-60">{node.type}</span>
                 </div>
               </div>
             );
           })}
 
           {nodes.length === 0 && (
-            <div className="flex h-full items-center justify-center text-xs" style={{ color: 'var(--text-muted)' }}>
+            <div className="flex h-full items-center justify-center text-xs p-4 text-center" style={{ color: 'var(--text-muted)' }}>
               Холст пуст. Добавьте компоненты из палитры слева.
             </div>
           )}
         </div>
       </div>
 
+      {/* Список соединений с кнопкой удаления на мобильных */}
+      {connections.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5 items-center">
+          <span className="text-[11px] font-bold" style={{ color: 'var(--text-muted)' }}>Связи:</span>
+          {connections.map((c) => {
+            const fromNode = nodes.find((n) => n.id === c.from);
+            const toNode = nodes.find((n) => n.id === c.to);
+            return (
+              <span
+                key={c.id}
+                className="inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-[10px]"
+                style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+              >
+                <span>{fromNode ? fromNode.label.split(' ')[0] : 'Node'} ➔ {toNode ? toNode.label.split(' ')[0] : 'Node'}</span>
+                <button
+                  onClick={() => deleteConnection(c.id)}
+                  className="text-red-500 hover:opacity-75 font-bold"
+                  title="Удалить связь"
+                >
+                  ✕
+                </button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+
       {/* Блок вердикта AI */}
       {aiFeedback && (
         <div
-          className="mt-6 rounded-2xl border p-5 shadow-lg animate-fade-in"
+          className="mt-6 rounded-2xl border p-4 sm:p-5 shadow-lg animate-fade-in"
           style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border)' }}
         >
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+            <h3 className="flex items-center gap-2 text-sm sm:text-base font-bold" style={{ color: 'var(--text-primary)' }}>
               <span>🤖</span> Вердикт AI Архитектора:
             </h3>
             <button
@@ -471,14 +592,14 @@ export default function SystemDesign() {
                 <button
                   type="button"
                   onClick={() => setShowKeyModal(false)}
-                  className="rounded-xl border px-4 py-2 text-xs font-medium transition"
+                  className="min-h-[40px] rounded-xl border px-4 py-2 text-xs font-medium transition"
                   style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl px-4 py-2 text-xs font-bold text-white transition"
+                  className="min-h-[40px] rounded-xl px-4 py-2 text-xs font-bold text-white transition"
                   style={{ background: 'var(--accent)' }}
                 >
                   Сохранить

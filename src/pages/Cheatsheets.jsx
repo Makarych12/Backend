@@ -3,7 +3,7 @@ import CodeBlock from '../components/CodeBlock';
 
 export default function Cheatsheets() {
   return (
-    <div className="mx-auto max-w-5xl animate-fade-in px-6 py-10">
+    <div className="mx-auto max-w-5xl animate-fade-in px-4 py-6 sm:px-6 sm:py-10">
       <h1 className="mb-2 text-2xl font-bold sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
         Шпаргалки
       </h1>

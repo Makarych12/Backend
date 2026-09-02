@@ -136,7 +136,7 @@ export default function LessonPage() {
   const rawExamples = lesson.examples || (lesson.example ? [lesson.example] : []);
 
   return (
-    <div className="mx-auto max-w-3xl animate-fade-in px-6 py-10">
+    <div className="mx-auto max-w-3xl animate-fade-in px-4 py-6 sm:px-6 sm:py-10">
       <div className="mb-6 flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
         <Link to="/" className="hover:opacity-80">
           Курс

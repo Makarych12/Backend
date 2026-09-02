@@ -13,7 +13,7 @@ export default function ModulePage() {
   const mp = moduleProgress(module, completed);
 
   return (
-    <div className="mx-auto max-w-4xl animate-fade-in px-6 py-10">
+    <div className="mx-auto max-w-4xl animate-fade-in px-4 py-6 sm:px-6 sm:py-10">
       <Link to="/" className="mb-6 inline-block text-sm hover:opacity-80" style={{ color: 'var(--text-muted)' }}>
         ← Все модули
       </Link>
