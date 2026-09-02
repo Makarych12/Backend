@@ -1,11 +1,37 @@
 import { Link } from 'react-router-dom';
 import { modules } from '../data/modules';
 import { useProgress, moduleProgress, overallProgress } from '../hooks/useProgress';
+import { useAiMentor } from '../hooks/useAiMentor';
 import ProgressBar from '../components/ProgressBar';
 
 export default function Home() {
   const { completed } = useProgress();
+  const { openMentor } = useAiMentor();
   const overall = overallProgress(modules, completed);
+
+  const handleAskNavigator = () => {
+    const completedModuleTitles = modules
+      .filter((m) => moduleProgress(m, completed).pct === 100)
+      .map((m) => `${m.order}. ${m.title}`);
+
+    const inProgressModule = modules.find((m) => {
+      const p = moduleProgress(m, completed);
+      return p.done > 0 && p.pct < 100;
+    });
+
+    const context = `Общий прогресс: ${overall.done} из ${overall.total} уроков (${overall.pct}%).\nЗавершенные модули: ${
+      completedModuleTitles.length > 0 ? completedModuleTitles.join(', ') : 'Ещё не завершено ни одного модуля'
+    }.\nТекущий модуль в процессе: ${
+      inProgressModule ? `${inProgressModule.order}. ${inProgressModule.title}` : 'Модуль 1'
+    }`;
+
+    openMentor({
+      role: 'navigator',
+      initialMessage: 'Подскажи, что мне делать дальше в курсе, на чём сфокусироваться и какой следующий шаг предпринять?',
+      context,
+      autoSend: true,
+    });
+  };
 
   return (
     <div className="mx-auto max-w-5xl animate-fade-in px-4 py-6 sm:px-6 sm:py-10">
@@ -24,13 +50,22 @@ export default function Home() {
       </div>
 
       <div className="mb-10 rounded-2xl border p-5" style={{ borderColor: 'var(--border)', background: 'var(--bg-secondary)' }}>
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
             Твой прогресс
           </span>
-          <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            {overall.done} из {overall.total} уроков
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              {overall.done} из {overall.total} уроков
+            </span>
+            <button
+              onClick={handleAskNavigator}
+              className="flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 transition hover:bg-indigo-500/20"
+            >
+              <span>🧭</span>
+              <span>Что делать дальше? (Совет AI)</span>
+            </button>
+          </div>
         </div>
         <ProgressBar pct={overall.pct} />
         {overall.done === 0 && (

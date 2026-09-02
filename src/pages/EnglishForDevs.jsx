@@ -1,12 +1,22 @@
 import { useState } from 'react';
 import { englishData } from '../data/englishData';
+import { useAiMentor } from '../hooks/useAiMentor';
 import CodeBlock from '../components/CodeBlock';
 
 export default function EnglishForDevs() {
+  const { openMentor } = useAiMentor();
   const [activeTab, setActiveTab] = useState('terms'); // 'terms' | 'interviews' | 'phrases' | 'docs' | 'quiz'
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedIndex, setCopiedIndex] = useState(null);
+
+  const startEnglishChat = () => {
+    openMentor({
+      role: 'english_companion',
+      initialMessage: 'Hi Alex! I would like to practice technical English conversation for daily work and code reviews.',
+      autoSend: true,
+    });
+  };
 
   // Состояние квиза:
   const [quizAnswers, setQuizAnswers] = useState({});
@@ -58,13 +68,24 @@ export default function EnglishForDevs() {
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-2xl">
             🇬🇧
           </span>
-          <div>
-            <h1 className="text-2xl font-bold sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
-              {englishData.title}
-            </h1>
-            <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
-              {englishData.subtitle}
-            </p>
+          <div className="flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-bold sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
+                {englishData.title}
+              </h1>
+              <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
+                {englishData.subtitle}
+              </p>
+            </div>
+
+            <button
+              onClick={startEnglishChat}
+              className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white shadow-md transition hover:brightness-110"
+              style={{ background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)' }}
+            >
+              <span>💬</span>
+              <span>English AI Chat (Диалог)</span>
+            </button>
           </div>
         </div>
 

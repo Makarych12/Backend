@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { runPython, isPyodideLoaded } from '../utils/pyodideRunner';
 import { reviewPythonCode, getCustomApiKey, setCustomApiKey } from '../utils/aiService';
+import { useAiMentor } from '../hooks/useAiMentor';
 
 export default function Sandbox({ initialCode, bootstrap, description }) {
   const [code, setCode] = useState(initialCode);
@@ -8,7 +9,9 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
   const [status, setStatus] = useState('idle'); // idle | loading | running
   const [hasRun, setHasRun] = useState(false);
 
-  // AI Review state:
+  const { openMentor } = useAiMentor();
+
+  // AI Review local state:
   const [aiStatus, setAiStatus] = useState('idle'); // idle | loading | success | error | no_key
   const [aiReview, setAiReview] = useState(null);
   const [aiError, setAiError] = useState('');
@@ -62,6 +65,15 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
     }
   }
 
+  function handleExplainError(errText) {
+    openMentor({
+      role: 'error_explainer',
+      initialMessage: `При запуске этого кода возникла ошибка:\n${errText}\n\nОбъясни мне простыми словами, что случилось, почему и как это исправить?`,
+      context: `Код в песочнице:\n\`\`\`python\n${code}\n\`\`\`\n\nТекст ошибки (Traceback):\n${errText}\n\nОписание задания:\n${description || 'Упражнение'}`,
+      autoSend: true,
+    });
+  }
+
   function handleSaveKey(e) {
     e.preventDefault();
     setCustomApiKey(customKeyInput);
@@ -71,6 +83,8 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
 
   const running = status !== 'idle';
   const aiLoading = aiStatus === 'loading';
+  const hasError = logs.some((l) => l.type === 'error');
+  const errorEntry = logs.find((l) => l.type === 'error');
 
   return (
     <div className="overflow-hidden rounded-xl border" style={{ borderColor: 'var(--border)', background: 'var(--bg-secondary)' }}>
@@ -84,16 +98,16 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleReset}
-            className="rounded-md px-2.5 py-1.5 text-xs font-medium transition hover:bg-[var(--bg-hover)]"
+            className="min-h-[36px] rounded-md px-2.5 py-1.5 text-xs font-medium transition hover:bg-[var(--bg-hover)]"
             style={{ color: 'var(--text-secondary)' }}
           >
             Сбросить
           </button>
-          
+
           <button
             onClick={handleAiReview}
             disabled={aiLoading}
-            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition hover:brightness-110 disabled:opacity-60"
+            className="min-h-[36px] flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition hover:brightness-110 disabled:opacity-60"
             style={{
               background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
               color: '#ffffff',
@@ -106,7 +120,7 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
           <button
             onClick={handleRun}
             disabled={running}
-            className="rounded-md px-3 py-1.5 text-xs font-semibold transition disabled:opacity-60"
+            className="min-h-[36px] rounded-md px-3 py-1.5 text-xs font-semibold transition disabled:opacity-60"
             style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }}
           >
             {status === 'loading' ? 'Загружаем Python...' : status === 'running' ? 'Выполняется...' : '▶ Запустить'}
@@ -130,7 +144,7 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
       {/* Панель обратной связи AI-ревьюера */}
       {aiStatus !== 'idle' && (
         <div
-          className="border-b p-4 text-xs transition"
+          className="border-b p-4 text-xs transition animate-fade-in"
           style={{
             background: aiStatus === 'no_key' ? 'color-mix(in srgb, var(--warning) 10%, var(--bg-secondary))' : 'var(--bg-hover)',
             borderColor: 'var(--border)',
@@ -171,7 +185,7 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
               </p>
               <button
                 onClick={() => setShowKeyModal(true)}
-                className="rounded-lg px-3 py-1.5 font-medium transition"
+                className="min-h-[38px] rounded-lg px-3 py-1.5 font-medium transition"
                 style={{ background: 'var(--accent)', color: '#ffffff' }}
               >
                 ⚙️ Ввести API-ключ OpenRouter
@@ -198,7 +212,7 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
               🔑 Настройка OpenRouter API-ключа
             </h3>
             <p className="mb-4 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              Ключ сохранится только в вашем браузере (<code>localStorage</code>) и будет использоваться для AI-ревьюера, тренажёра собеседования и System Design.
+              Ключ сохранится только в вашем браузере (<code>localStorage</code>) и будет использоваться для AI-наставника.
             </p>
 
             <form onSubmit={handleSaveKey} className="space-y-3">
@@ -218,14 +232,14 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
                 <button
                   type="button"
                   onClick={() => setShowKeyModal(false)}
-                  className="rounded-xl border px-4 py-2 text-xs font-medium transition"
+                  className="min-h-[38px] rounded-xl border px-4 py-2 text-xs font-medium transition"
                   style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl px-4 py-2 text-xs font-bold text-white transition"
+                  className="min-h-[38px] rounded-xl px-4 py-2 text-xs font-bold text-white transition"
                   style={{ background: 'var(--accent)' }}
                 >
                   Сохранить ключ
@@ -242,27 +256,42 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
             value={code}
             onChange={(e) => setCode(e.target.value)}
             spellCheck={false}
-            className="h-72 w-full resize-none p-4 font-mono text-[13px] leading-relaxed outline-none"
+            className="h-64 sm:h-72 w-full resize-none p-4 font-mono text-[13px] leading-relaxed outline-none"
             style={{ background: 'var(--code-bg)', color: 'var(--text-primary)' }}
           />
         </div>
         <div
-          className="flex h-72 flex-col overflow-y-auto p-4 font-mono text-[13px] leading-relaxed"
+          className="flex h-64 sm:h-72 flex-col justify-between overflow-y-auto p-4 font-mono text-[13px] leading-relaxed"
           style={{ background: 'var(--code-bg)' }}
         >
-          {!hasRun && !running && <span style={{ color: 'var(--text-muted)' }}>Нажми «Запустить», чтобы увидеть вывод print() здесь</span>}
-          {hasRun && logs.length === 0 && (
-            <span style={{ color: 'var(--text-muted)' }}>Код выполнен, но ничего не выведено (нет print())</span>
+          <div className="space-y-1">
+            {!hasRun && !running && <span style={{ color: 'var(--text-muted)' }}>Нажми «Запустить», чтобы увидеть вывод print() здесь</span>}
+            {hasRun && logs.length === 0 && (
+              <span style={{ color: 'var(--text-muted)' }}>Код выполнен, но ничего не выведено (нет print())</span>
+            )}
+            {logs.map((entry, i) => (
+              <pre
+                key={i}
+                className="whitespace-pre-wrap break-words"
+                style={{ color: entry.type === 'error' ? 'var(--danger)' : 'var(--text-primary)' }}
+              >
+                {entry.type === 'error' ? '✗ ' : '›'} {entry.text}
+              </pre>
+            ))}
+          </div>
+
+          {/* Кнопка "Объяснить эту ошибку с AI" */}
+          {hasError && errorEntry && (
+            <div className="mt-3 pt-2 border-t border-red-500/20">
+              <button
+                onClick={() => handleExplainError(errorEntry.text)}
+                className="min-h-[34px] flex w-full items-center justify-center gap-1.5 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-500 transition hover:bg-red-500/20"
+              >
+                <span>🔍</span>
+                <span>Объяснить эту ошибку с AI</span>
+              </button>
+            </div>
           )}
-          {logs.map((entry, i) => (
-            <pre
-              key={i}
-              className="whitespace-pre-wrap break-words"
-              style={{ color: entry.type === 'error' ? 'var(--danger)' : 'var(--text-primary)' }}
-            >
-              {entry.type === 'error' ? '✗ ' : '›'} {entry.text}
-            </pre>
-          ))}
         </div>
       </div>
     </div>

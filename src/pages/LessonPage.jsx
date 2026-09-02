@@ -1,6 +1,7 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { findLesson, adjacentLessons } from '../data/modules';
 import { useProgress } from '../hooks/useProgress';
+import { useAiMentor } from '../hooks/useAiMentor';
 import CodeBlock from '../components/CodeBlock';
 import Sandbox from '../components/Sandbox';
 import Terminal from '../components/Terminal';
@@ -123,6 +124,7 @@ export default function LessonPage() {
   const { moduleId, lessonId } = useParams();
   const found = findLesson(moduleId, lessonId);
   const { isComplete, toggleComplete } = useProgress();
+  const { openMentor } = useAiMentor();
 
   if (!found) return <Navigate to={`/module/${moduleId}`} replace />;
 
@@ -159,6 +161,28 @@ export default function LessonPage() {
           {lesson.theory.map((block, i) => (
             <TheoryBlock key={i} block={block} />
           ))}
+        </div>
+
+        {/* Триггер AI-Репетитора */}
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={() => {
+              const theorySummary = lesson.theory
+                .filter((b) => b.text)
+                .map((b) => b.text)
+                .join('\n\n');
+              openMentor({
+                role: 'tutor',
+                initialMessage: `Я прочитал теорию урока «${lesson.title}», но мне сложно её понять. Объясни мне эту тему другими словами с яркой бытовой аналогией и простым примером!`,
+                context: `Урок: ${lesson.title}\nОписание: ${lesson.summary}\n\nТекст теории:\n${theorySummary}`,
+                autoSend: true,
+              });
+            }}
+            className="flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 transition hover:bg-indigo-500/20"
+          >
+            <span>💡</span>
+            <span>Не понял, объясни по-другому с AI</span>
+          </button>
         </div>
       </Section>
 
@@ -210,6 +234,25 @@ export default function LessonPage() {
             {lesson.tasks.map((task, i) => (
               <TaskCard key={i} task={task} />
             ))}
+          </div>
+
+          {/* Триггер AI-Генератора практики */}
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={() => {
+                const tasksSummary = lesson.tasks.map((t) => `- ${t.title}: ${t.description}`).join('\n');
+                openMentor({
+                  role: 'practice_generator',
+                  initialMessage: `Придумай для меня новое практическое задание по теме урока «${lesson.title}», которого ещё не было в списке!`,
+                  context: `Урок: ${lesson.title}\nСуществующие задачи:\n${tasksSummary}`,
+                  autoSend: true,
+                });
+              }}
+              className="flex items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-500/10 px-3.5 py-2 text-xs font-semibold text-purple-600 dark:text-purple-400 transition hover:bg-purple-500/20"
+            >
+              <span>🎯</span>
+              <span>Получить ещё одно похожее задание с AI</span>
+            </button>
           </div>
         </Section>
       )}
