@@ -89,7 +89,7 @@ print("Стоимость 500 входящих + 200 исходящих токе
 prompt = "Извлеки имя и телефон из текста: 'Меня зовут Алексей, мой номер +79991234567'"
 
 # Промпт требует вернуть СТРОГИЙ JSON:
-system_instruction = "Верни ответ строго в формате JSON: {\\"name\\": str, \\"phone\\": str}"
+system_instruction = 'Верни ответ строго в формате JSON: {"name": str, "phone": str}'
 
 fake_ai_response = '{"name": "Алексей", "phone": "+79991234567"}'
 extracted_data = json.loads(fake_ai_response)

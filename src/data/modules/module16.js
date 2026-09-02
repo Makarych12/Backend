@@ -639,7 +639,7 @@ app.add_middleware(
         },
         {
           title: 'Пример 2: Динамический API-клиент во фронтенде (JS / React)',
-          lang: 'bash',
+          lang: 'javascript',
           code: `// api.js на фронтенде:
 // В Vite переменные окружения начинаются с VITE_
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
