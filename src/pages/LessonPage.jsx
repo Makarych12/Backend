@@ -9,9 +9,12 @@ import TaskCard from '../components/TaskCard';
 import MistakesList from '../components/MistakesList';
 import Checklist from '../components/Checklist';
 import Callout from '../components/Callout';
+import RequestFlowAnimation from '../components/RequestFlowAnimation';
 
 function TheoryBlock({ block }) {
   switch (block.type) {
+    case 'requestAnimation':
+      return <RequestFlowAnimation initialScenario={block.initialScenario} title={block.title} />;
     case 'p':
       return (
         <p className="leading-relaxed" style={{ color: 'var(--text-secondary)' }}>

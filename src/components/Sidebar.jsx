@@ -3,6 +3,7 @@ import { modules } from '../data/modules';
 import { useProgress, moduleProgress, overallProgress } from '../hooks/useProgress';
 import ProgressBar from './ProgressBar';
 import ThemeToggle from './ThemeToggle';
+import GamificationWidget from './GamificationWidget';
 
 export default function Sidebar({ open, onClose }) {
   const { completed } = useProgress();
@@ -33,12 +34,15 @@ export default function Sidebar({ open, onClose }) {
           </div>
         </div>
 
-        <div className="border-b px-5 py-3.5" style={{ borderColor: 'var(--border)' }}>
-          <div className="mb-1.5 flex items-center justify-between text-xs" style={{ color: 'var(--text-secondary)' }}>
-            <span>Общий прогресс</span>
-            <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
-              {overall.done}/{overall.total}
-            </span>
+        <div className="border-b px-5 py-3.5 space-y-2.5" style={{ borderColor: 'var(--border)' }}>
+          <div className="flex items-center justify-between">
+            <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+              <span>Прогресс: </span>
+              <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                {overall.done}/{overall.total}
+              </span>
+            </div>
+            <GamificationWidget />
           </div>
           <ProgressBar pct={overall.pct} size="sm" />
         </div>
@@ -134,6 +138,50 @@ export default function Sidebar({ open, onClose }) {
             })}
           >
             <span className="text-base">🇬🇧</span> Английский для backend
+          </NavLink>
+          <NavLink
+            to="/interview-simulator"
+            onClick={onClose}
+            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition"
+            style={({ isActive }) => ({
+              background: isActive ? 'var(--bg-hover)' : 'transparent',
+              color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+            })}
+          >
+            <span className="text-base">🎙️</span> Тренажёр собеседования
+          </NavLink>
+          <NavLink
+            to="/system-design"
+            onClick={onClose}
+            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition"
+            style={({ isActive }) => ({
+              background: isActive ? 'var(--bg-hover)' : 'transparent',
+              color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+            })}
+          >
+            <span className="text-base">🏗️</span> System Design
+          </NavLink>
+          <NavLink
+            to="/real-world-systems"
+            onClick={onClose}
+            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition"
+            style={({ isActive }) => ({
+              background: isActive ? 'var(--bg-hover)' : 'transparent',
+              color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+            })}
+          >
+            <span className="text-base">🏛️</span> Как это устроено
+          </NavLink>
+          <NavLink
+            to="/resume-builder"
+            onClick={onClose}
+            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition"
+            style={({ isActive }) => ({
+              background: isActive ? 'var(--bg-hover)' : 'transparent',
+              color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+            })}
+          >
+            <span className="text-base">📄</span> Моё резюме
           </NavLink>
         </div>
       </aside>

@@ -261,10 +261,15 @@ await pyodide.runPythonAsync(`ТУТ sandbox.initialCode`, { globals: ns });
 
 Итоговые проекты (портфолио) — **Готово** (4 проекта в `src/data/projects.js` и `/projects`).
 Английский для backend-разработчика — **Готово** (`src/pages/EnglishForDevs.jsx`, `src/data/englishData.js` и `/english`).
+Живая анимация запросов — **Готово** (`src/components/RequestFlowAnimation.jsx` в Модуле 4 и уроках).
+AI-ревьюер кода в песочнице — **Готово** (`src/components/Sandbox.jsx`, `vite.config.js` backend proxy).
+AI-интервьюер (Тренажёр собеседования) — **Готово** (`src/pages/InterviewSimulator.jsx` и `/interview-simulator`).
+System Design песочница (Drag-and-Drop) — **Готово** (`src/pages/SystemDesign.jsx` и `/system-design`).
+Разбор реальных систем («Как это устроено») — **Готово** (`src/pages/RealWorldSystems.jsx` и `/real-world-systems`).
+Генератор резюме/портфолио («Моё резюме») — **Готово** (`src/pages/ResumeBuilder.jsx` и `/resume-builder`).
+Геймификация (Бейджи, Стрики, Лидерборд) — **Готово** (`src/components/GamificationWidget.jsx`, `src/utils/gamification.js`).
 
-Все модули 1-31 и спецразделы полностью реализованы и проверены: `npm run build` и `npm run lint` проходят чисто,
-каждая песочница прогнана через Node+Pyodide, дублей `lesson.id` по всему курсу нет. В каждом уроке
-добавлено расширенное количество подробных примеров кода (минимум 2-3 примера на урок).
+Все 31 модуль и все 7 спецразделов платформы полностью реализованы и проверены: `npm run build` и `npm run lint` проходят чисто (0 ошибок и 0 предупреждений).
 
 ## Что нужно сделать дальше — КОНКРЕТНО
 

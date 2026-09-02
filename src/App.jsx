@@ -2,12 +2,17 @@ import { useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import ThemeToggle from './components/ThemeToggle';
+import GamificationWidget from './components/GamificationWidget';
 import Home from './pages/Home';
 import ModulePage from './pages/ModulePage';
 import LessonPage from './pages/LessonPage';
 import Cheatsheets from './pages/Cheatsheets';
 import Projects from './pages/Projects';
 import EnglishForDevs from './pages/EnglishForDevs';
+import InterviewSimulator from './pages/InterviewSimulator';
+import SystemDesign from './pages/SystemDesign';
+import RealWorldSystems from './pages/RealWorldSystems';
+import ResumeBuilder from './pages/ResumeBuilder';
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,6 +38,7 @@ export default function App() {
           <span className="flex-1 font-medium" style={{ color: 'var(--text-primary)' }}>
             🐍 Python с нуля
           </span>
+          <GamificationWidget />
           <ThemeToggle />
         </header>
 
@@ -44,6 +50,10 @@ export default function App() {
             <Route path="/cheatsheets" element={<Cheatsheets />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/english" element={<EnglishForDevs />} />
+            <Route path="/interview-simulator" element={<InterviewSimulator />} />
+            <Route path="/system-design" element={<SystemDesign />} />
+            <Route path="/real-world-systems" element={<RealWorldSystems />} />
+            <Route path="/resume-builder" element={<ResumeBuilder />} />
           </Routes>
         </main>
       </div>
