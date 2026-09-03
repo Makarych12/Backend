@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { runPython, isPyodideLoaded } from '../utils/pyodideRunner';
 import { reviewPythonCode } from '../utils/aiService';
 import { useAiMentor } from '../hooks/useAiMentor';
@@ -10,6 +10,18 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
   const [hasRun, setHasRun] = useState(false);
 
   const { openMentor } = useAiMentor();
+
+  // Нумерация строк редактора: своя колонка слева, синхронизированная по скроллу с textarea
+  const codeRef = useRef(null);
+  const gutterRef = useRef(null);
+  const lineCount = code.split('\n').length;
+  const gutterWidth = `${Math.max(2, String(lineCount).length) + 1.5}ch`;
+
+  function handleCodeScroll(e) {
+    if (gutterRef.current) {
+      gutterRef.current.scrollTop = e.currentTarget.scrollTop;
+    }
+  }
 
   // AI Review local state:
   const [aiStatus, setAiStatus] = useState('idle'); // idle | loading | success | error | no_key
@@ -187,13 +199,34 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
 
       <div className="grid gap-px md:grid-cols-2" style={{ background: 'var(--border)' }}>
         <div style={{ background: 'var(--code-bg)' }}>
-          <textarea
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            spellCheck={false}
-            className="h-64 sm:h-72 w-full resize-none p-4 font-mono text-[13px] leading-relaxed outline-none"
-            style={{ background: 'var(--code-bg)', color: 'var(--text-primary)' }}
-          />
+          <div className="flex h-64 sm:h-72">
+            {/* Колонка с номерами строк, скроллится синхронно с textarea */}
+            <div
+              ref={gutterRef}
+              aria-hidden="true"
+              className="select-none overflow-hidden py-4 pl-2 pr-2 text-right font-mono text-[13px] leading-relaxed"
+              style={{
+                width: gutterWidth,
+                color: 'var(--text-muted)',
+                background: 'var(--code-bg)',
+                borderRight: '1px solid var(--border)',
+              }}
+            >
+              {Array.from({ length: lineCount }, (_, i) => (
+                <div key={i}>{i + 1}</div>
+              ))}
+            </div>
+            <textarea
+              ref={codeRef}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              onScroll={handleCodeScroll}
+              spellCheck={false}
+              wrap="off"
+              className="h-full flex-1 resize-none overflow-auto whitespace-pre py-4 pl-2 pr-4 font-mono text-[13px] leading-relaxed outline-none"
+              style={{ background: 'var(--code-bg)', color: 'var(--text-primary)' }}
+            />
+          </div>
         </div>
         <div
           className="flex h-64 sm:h-72 flex-col justify-between overflow-y-auto p-4 font-mono text-[13px] leading-relaxed"
