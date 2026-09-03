@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BADGES, updateStreakOnActivity, calculateBenchmark } from '../utils/gamification';
 import { useProgress } from '../hooks/useProgress';
+import Modal from './Modal';
 
 export default function GamificationWidget() {
   const { completed } = useProgress();
@@ -34,11 +35,11 @@ export default function GamificationWidget() {
 
       {/* Модальное окно ачивок и стрика */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
-          <div
-            className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border shadow-2xl"
-            style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
-          >
+        <Modal
+          onClose={() => setShowModal(false)}
+          panelClassName="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border shadow-2xl"
+          panelStyle={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
+        >
             {/* Шапка модалки */}
             <div className="flex items-center justify-between border-b px-6 py-4" style={{ borderColor: 'var(--border)' }}>
               <div className="flex items-center gap-2">
@@ -148,8 +149,7 @@ export default function GamificationWidget() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );

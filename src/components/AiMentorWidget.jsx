@@ -6,6 +6,7 @@ import {
   setSelectedModel,
   fetchAvailableModels,
 } from '../utils/aiService';
+import Modal from './Modal';
 
 const ROLE_SUGGESTIONS = {
   tutor: [
@@ -375,11 +376,11 @@ export default function AiMentorWidget() {
 
       {/* Модальное окно настроек AI-наставника */}
       {showKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div
-            className="w-full max-w-md rounded-3xl border p-6 shadow-2xl"
-            style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
-          >
+        <Modal
+          onClose={() => setShowKeyModal(false)}
+          panelClassName="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl border p-6 shadow-2xl"
+          panelStyle={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
+        >
             <div className="mb-3 flex items-center gap-2.5">
               <span className="text-2xl">⚙️</span>
               <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -464,8 +465,7 @@ export default function AiMentorWidget() {
                 Закрыть
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );
