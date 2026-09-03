@@ -1,6 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAiMentor } from '../hooks/useAiMentor';
-import { AI_ROLES, getCustomApiKey, setCustomApiKey } from '../utils/aiService';
+import {
+  AI_ROLES,
+  getCustomApiKey,
+  setCustomApiKey,
+  getSelectedModel,
+  setSelectedModel,
+  fetchAvailableModels,
+} from '../utils/aiService';
 
 const ROLE_SUGGESTIONS = {
   tutor: [
@@ -59,6 +66,11 @@ export default function AiMentorWidget() {
   const [inputVal, setInputVal] = useState('');
   const [customKeyInput, setCustomKeyInput] = useState(getCustomApiKey());
   const [showRoleMenu, setShowRoleMenu] = useState(false);
+  const [modelId, setModelId] = useState(getSelectedModel());
+  const [modelSearch, setModelSearch] = useState('');
+  const [models, setModels] = useState([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [modelsError, setModelsError] = useState('');
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -67,6 +79,30 @@ export default function AiMentorWidget() {
       chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isLoading, isOpen]);
+
+  // Загружаем список моделей OpenRouter при первом открытии настроек
+  useEffect(() => {
+    if (!showKeyModal || models.length > 0 || modelsLoading) return;
+    setModelsLoading(true);
+    setModelsError('');
+    fetchAvailableModels().then((res) => {
+      if (res.ok) {
+        setModels(res.models || []);
+      } else {
+        setModelsError(res.error || 'Не удалось загрузить список моделей');
+      }
+      setModelsLoading(false);
+    });
+  }, [showKeyModal, models.length, modelsLoading]);
+
+  const handlePickModel = (id) => {
+    setModelId(id);
+    setSelectedModel(id);
+  };
+
+  const filteredModels = models.filter((m) =>
+    (m.name + ' ' + m.id).toLowerCase().includes(modelSearch.toLowerCase())
+  );
 
   const handleSend = (e) => {
     e?.preventDefault();
@@ -365,6 +401,69 @@ export default function AiMentorWidget() {
               <br /><br />
               Для персонального тестирования вы можете указать свой личный ключ OpenRouter (<code>sk-or-v1-...</code>) прямо здесь. Он сохранится локально в вашем браузере.
             </p>
+
+            {/* Выбор модели / провайдера через OpenRouter */}
+            <div className="mb-4">
+              <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                Модель AI (OpenRouter)
+              </label>
+
+              <div
+                className="mb-1.5 rounded-xl border px-3 py-2 text-xs font-mono"
+                style={{ borderColor: 'var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+              >
+                {modelId}
+              </div>
+
+              <input
+                type="text"
+                placeholder="Поиск модели (например: gpt, claude, deepseek)..."
+                value={modelSearch}
+                onChange={(e) => setModelSearch(e.target.value)}
+                className="w-full rounded-xl border p-2.5 text-xs outline-none mb-1.5"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-primary)',
+                }}
+              />
+
+              <div
+                className="max-h-40 overflow-y-auto rounded-xl border"
+                style={{ borderColor: 'var(--border)' }}
+              >
+                {modelsLoading && (
+                  <div className="p-3 text-xs italic" style={{ color: 'var(--text-muted)' }}>
+                    ⏳ Загружаю список моделей...
+                  </div>
+                )}
+                {modelsError && (
+                  <div className="p-3 text-xs" style={{ color: '#ef4444' }}>
+                    ❌ {modelsError}
+                  </div>
+                )}
+                {!modelsLoading && !modelsError && filteredModels.length === 0 && (
+                  <div className="p-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+                    Ничего не найдено
+                  </div>
+                )}
+                {filteredModels.slice(0, 100).map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => handlePickModel(m.id)}
+                    className="flex w-full flex-col items-start gap-0 px-3 py-2 text-left text-xs transition hover:bg-[var(--bg-hover)]"
+                    style={{
+                      background: m.id === modelId ? 'color-mix(in srgb, var(--accent) 15%, transparent)' : 'transparent',
+                      color: m.id === modelId ? 'var(--accent)' : 'var(--text-primary)',
+                    }}
+                  >
+                    <span className="font-bold">{m.name}</span>
+                    <span className="text-[10px] opacity-60 font-mono">{m.id}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <form onSubmit={handleSaveKey} className="space-y-3">
               <input

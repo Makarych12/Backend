@@ -1,5 +1,7 @@
 // Client AI Service: calls local Vite backend proxy /api/ai/chat
 
+const DEFAULT_MODEL = 'openai/gpt-4o-mini';
+
 export function getCustomApiKey() {
   return localStorage.getItem('backend_course_openrouter_key') || '';
 }
@@ -9,6 +11,34 @@ export function setCustomApiKey(key) {
     localStorage.removeItem('backend_course_openrouter_key');
   } else {
     localStorage.setItem('backend_course_openrouter_key', key.trim());
+  }
+}
+
+export function getSelectedModel() {
+  return localStorage.getItem('backend_course_openrouter_model') || DEFAULT_MODEL;
+}
+
+export function setSelectedModel(modelId) {
+  if (!modelId) {
+    localStorage.removeItem('backend_course_openrouter_model');
+  } else {
+    localStorage.setItem('backend_course_openrouter_model', modelId.trim());
+  }
+}
+
+/**
+ * Загружает список доступных моделей OpenRouter через локальный proxy /api/ai/models
+ */
+export async function fetchAvailableModels() {
+  try {
+    const res = await fetch('/api/ai/models');
+    if (!res.ok) {
+      return { ok: false, error: 'Ошибка сети при получении списка моделей' };
+    }
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    return { ok: false, error: `Не удалось связаться с сервером: ${err.message}` };
   }
 }
 
@@ -29,7 +59,7 @@ export async function requestAiChat({ systemPrompt, prompt, messages, model, tem
         systemPrompt,
         prompt,
         messages,
-        model: model || 'openai/gpt-4o-mini',
+        model: model || getSelectedModel(),
         temperature: temperature ?? 0.7,
         maxTokens: maxTokens ?? 1200,
       }),

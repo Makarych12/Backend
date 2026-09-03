@@ -1,12 +1,45 @@
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 
-function aiProxyPlugin() {
+function aiProxyPlugin(serverApiKey) {
   return {
     name: 'ai-proxy-plugin',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
+        if (req.method === 'GET' && req.url === '/api/ai/models') {
+          try {
+            const apiRes = await fetch('https://openrouter.ai/api/v1/models')
+            const apiData = await apiRes.json()
+
+            if (!apiRes.ok) {
+              res.statusCode = 200
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ ok: false, code: 'API_ERROR', error: 'Не удалось получить список моделей' }))
+              return
+            }
+
+            const models = (apiData.data || [])
+              .map((m) => ({
+                id: m.id,
+                name: m.name || m.id,
+                context_length: m.context_length,
+                prompt_price: m.pricing?.prompt,
+                completion_price: m.pricing?.completion,
+              }))
+              .sort((a, b) => a.name.localeCompare(b.name))
+
+            res.statusCode = 200
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ ok: true, models }))
+          } catch (err) {
+            res.statusCode = 200
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ ok: false, code: 'SERVER_ERROR', error: err.message }))
+          }
+          return
+        }
+
         if (req.method === 'POST' && req.url === '/api/ai/chat') {
           let body = ''
           req.on('data', (chunk) => {
@@ -15,7 +48,7 @@ function aiProxyPlugin() {
           req.on('end', async () => {
             try {
               const data = JSON.parse(body || '{}')
-              const serverKey = process.env.OPENROUTER_API_KEY
+              const serverKey = serverApiKey
               const clientKey = req.headers['x-openrouter-key']
               const apiKey = serverKey || clientKey
 
@@ -88,6 +121,13 @@ function aiProxyPlugin() {
 }
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss(), aiProxyPlugin()],
+export default defineConfig(({ mode }) => {
+  // Пустой префикс '' заставляет loadEnv вернуть ВСЕ переменные из .env,
+  // а не только те, что начинаются с VITE_ (иначе OPENROUTER_API_KEY
+  // никогда не попадёт в process.env этого файла).
+  const env = loadEnv(mode, process.cwd(), '')
+
+  return {
+    plugins: [react(), tailwindcss(), aiProxyPlugin(env.OPENROUTER_API_KEY)],
+  }
 })
