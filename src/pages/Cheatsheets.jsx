@@ -19,6 +19,12 @@ export default function Cheatsheets() {
               {sheet.title}
             </h2>
 
+            {sheet.description && (
+              <p className="mb-3 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                {sheet.description}
+              </p>
+            )}
+
             {sheet.code && <CodeBlock code={sheet.code} lang={sheet.lang || 'bash'} title={sheet.title} />}
 
             {sheet.items && (

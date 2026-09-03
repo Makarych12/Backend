@@ -202,4 +202,24 @@ docker compose up -d             # поднять сервисы из docker-com
 docker compose down              # остановить и удалить контейнеры
 docker logs -f <container>       # смотреть логи в реальном времени`,
   },
+  {
+    id: 'keyboard-symbols',
+    title: 'Символы на клавиатуре (для планшетов/компактных клавиатур)',
+    icon: '🔣',
+    description:
+      'Если печатаешь код на компактной клавиатуре без подписанных символов — вот где их искать (для стандартной английской раскладки).',
+    items: [
+      { label: '{ }', text: 'Shift + [ ]' },
+      { label: '[ ]', text: 'без Shift, клавиша рядом с P' },
+      { label: ':', text: 'Shift + ;' },
+      { label: '_', text: 'Shift + -' },
+      { label: '=', text: 'без Shift, отдельная клавиша' },
+      { label: '"', text: "Shift + '" },
+      { label: '#', text: 'Shift + 3' },
+      { label: '|', text: 'Shift + \\' },
+      { label: '\\', text: 'без Shift, клавиша рядом с Enter' },
+      { label: '~', text: 'Shift + ` (клавиша слева от 1, выше Tab)' },
+      { label: 'Tab', text: 'клавиша Tab, используется для отступов в Python' },
+    ],
+  },
 ];
