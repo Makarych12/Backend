@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import ThemeToggle from './components/ThemeToggle';
 import GamificationWidget from './components/GamificationWidget';
+import BadgeUnlockToast from './components/BadgeUnlockToast';
 import Home from './pages/Home';
 import ModulePage from './pages/ModulePage';
 import LessonPage from './pages/LessonPage';
@@ -64,6 +65,9 @@ export default function App() {
 
         {/* Единый плавающий AI-наставник */}
         <AiMentorWidget />
+
+        {/* Уведомление о получении нового бейджа */}
+        <BadgeUnlockToast />
       </div>
     </AiMentorProvider>
   );

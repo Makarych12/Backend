@@ -1,5 +1,16 @@
 // Gamification engine: Badges, Daily Streaks, and Benchmark calculations
 
+import { modules } from '../data/modules';
+
+// Бейдж "модуль пройден" требует, чтобы ВСЕ уроки этого модуля были в completed —
+// сверяемся с реальными module.id/lesson.id из data/modules, а не с захардкоженными
+// строками, которые расходились с фактическими id и поэтому никогда не совпадали.
+function isModuleComplete(moduleId, completed) {
+  const module = modules.find((m) => m.id === moduleId);
+  if (!module || module.lessons.length === 0) return false;
+  return module.lessons.every((lesson) => completed.has(lesson.id));
+}
+
 export const BADGES = [
   {
     id: 'first_step',
@@ -13,63 +24,63 @@ export const BADGES = [
     title: 'Заклинатель Python',
     icon: '🐍',
     desc: 'Заверши модуль 2 «Основы Python»',
-    check: (completed) => completed.has('py-vars') && completed.has('py-types') && completed.has('py-funcs'),
+    check: (completed) => isModuleComplete('python-basics', completed),
   },
   {
     id: 'oop_architect',
     title: 'Мастер ООП',
     icon: '📦',
     desc: 'Освой классы и объекты в модуле 3',
-    check: (completed) => completed.has('classes-objects'),
+    check: (completed) => isModuleComplete('oop', completed),
   },
   {
     id: 'http_master',
     title: 'Властелин сети',
     icon: '🌐',
     desc: 'Разберись в протоколе HTTP в модуле 4',
-    check: (completed) => completed.has('client-server') && completed.has('http-basics'),
+    check: (completed) => isModuleComplete('internet', completed),
   },
   {
     id: 'fastapi_pilot',
     title: 'FastAPI Пилот',
     icon: '⚡',
     desc: 'Запусти свой первый сервер в модуле 5',
-    check: (completed) => completed.has('first-api'),
+    check: (completed) => completed.has('first-fastapi-server'),
   },
   {
     id: 'database_guru',
     title: 'Повелитель SQL',
     icon: '🗄️',
     desc: 'Освой PostgreSQL и SQLAlchemy в модуле 7',
-    check: (completed) => completed.has('intro-db') || completed.has('sqlalchemy-basics'),
+    check: (completed) => isModuleComplete('databases', completed),
   },
   {
     id: 'security_shield',
     title: 'Киберщит',
     icon: '🛡️',
     desc: 'Изучи безопасность и защиту от атак в модуле 11',
-    check: (completed) => completed.has('cors-origin') || completed.has('security-basics'),
+    check: (completed) => isModuleComplete('security', completed),
   },
   {
     id: 'async_ninja',
     title: 'Асинхронный ниндзя',
     icon: '⏱️',
     desc: 'Освой async/await и неблокирующий ввод-вывод в модуле 12',
-    check: (completed) => completed.has('async-intro') || completed.has('async-gather'),
+    check: (completed) => isModuleComplete('async', completed),
   },
   {
     id: 'docker_captain',
     title: 'Капитан Docker',
     icon: '🐳',
     desc: 'Собери свой первый образ в модуле 22',
-    check: (completed) => completed.has('docker-basics') || completed.has('dockerfile-from-scratch'),
+    check: (completed) => completed.has('dockerfile-line-by-line'),
   },
   {
     id: 'queue_commander',
     title: 'Повелитель очередей',
     icon: '📬',
     desc: 'Запусти Celery и Redis в модуле 23',
-    check: (completed) => completed.has('why-task-queues') || completed.has('celery-first-task'),
+    check: (completed) => completed.has('why-task-queues-restaurant'),
   },
   {
     id: 'ai_pioneer',
