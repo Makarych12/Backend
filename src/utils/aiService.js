@@ -2,17 +2,9 @@
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini';
 
-export function getCustomApiKey() {
-  return localStorage.getItem('backend_course_openrouter_key') || '';
-}
-
-export function setCustomApiKey(key) {
-  if (!key) {
-    localStorage.removeItem('backend_course_openrouter_key');
-  } else {
-    localStorage.setItem('backend_course_openrouter_key', key.trim());
-  }
-}
+// Ключ OpenRouter больше не хранится в браузере — удаляем то, что могло
+// остаться там от старой версии интерфейса, где было поле для личного ключа.
+localStorage.removeItem('backend_course_openrouter_key');
 
 export function getSelectedModel() {
   return localStorage.getItem('backend_course_openrouter_model') || DEFAULT_MODEL;
@@ -43,18 +35,10 @@ export async function fetchAvailableModels() {
 }
 
 export async function requestAiChat({ systemPrompt, prompt, messages, model, temperature, maxTokens }) {
-  const customKey = getCustomApiKey();
-  const headers = {
-    'Content-Type': 'application/json',
-  };
-  if (customKey) {
-    headers['x-openrouter-key'] = customKey;
-  }
-
   try {
     const res = await fetch('/api/ai/chat', {
       method: 'POST',
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         systemPrompt,
         prompt,

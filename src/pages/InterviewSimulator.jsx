@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { interviewTurn, getCustomApiKey, setCustomApiKey } from '../utils/aiService';
+import { interviewTurn } from '../utils/aiService';
 
 const TOPICS = [
   { id: 'all', title: '🎲 Комплексное собеседование', desc: 'Вопросы по всем ключевым темам бэкенда' },
@@ -52,9 +52,6 @@ export default function InterviewSimulator() {
   const [isLoading, setIsLoading] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
   const [offlineIdx, setOfflineIdx] = useState(0);
-
-  const [showKeyModal, setShowKeyModal] = useState(false);
-  const [customKeyInput, setCustomKeyInput] = useState(getCustomApiKey());
 
   const chatEndRef = useRef(null);
 
@@ -153,12 +150,6 @@ export default function InterviewSimulator() {
     setIsLoading(false);
   };
 
-  const handleSaveKey = (e) => {
-    e.preventDefault();
-    setCustomApiKey(customKeyInput);
-    setShowKeyModal(false);
-  };
-
   return (
     <div className="mx-auto max-w-4xl animate-fade-in px-4 py-8 sm:px-6 sm:py-10">
       {/* Шапка */}
@@ -174,14 +165,6 @@ export default function InterviewSimulator() {
             Интерактивный симулятор технического интервью с опытным Team Lead (на базе AI).
           </p>
         </div>
-
-        <button
-          onClick={() => setShowKeyModal(true)}
-          className="self-start rounded-xl border px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--bg-hover)] sm:self-center"
-          style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
-        >
-          ⚙️ Настроить API-ключ
-        </button>
       </div>
 
       {/* Экран выбора темы и сложности перед стартом */}
@@ -354,54 +337,6 @@ export default function InterviewSimulator() {
         </div>
       )}
 
-      {/* Модалка настроек ключа */}
-      {showKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div
-            className="w-full max-w-md rounded-2xl border p-6 shadow-2xl"
-            style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
-          >
-            <h3 className="mb-2 text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
-              🔑 OpenRouter API-ключ
-            </h3>
-            <p className="mb-4 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              Укажите ключ OpenRouter (<code>sk-or-v1-...</code>) для включения живого AI-собеседования. Ключ хранится строго в вашем браузере.
-            </p>
-
-            <form onSubmit={handleSaveKey} className="space-y-3">
-              <input
-                type="password"
-                placeholder="sk-or-v1-..."
-                value={customKeyInput}
-                onChange={(e) => setCustomKeyInput(e.target.value)}
-                className="w-full rounded-xl border px-3.5 py-2 font-mono text-xs outline-none"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  borderColor: 'var(--border)',
-                  color: 'var(--text-primary)',
-                }}
-              />
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowKeyModal(false)}
-                  className="rounded-xl border px-4 py-2 text-xs font-medium transition"
-                  style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
-                >
-                  Отмена
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-xl px-4 py-2 text-xs font-bold text-white transition"
-                  style={{ background: 'var(--accent)' }}
-                >
-                  Сохранить
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

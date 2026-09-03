@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { evaluateSystemDesignArchitecture, getCustomApiKey, setCustomApiKey } from '../utils/aiService';
+import { evaluateSystemDesignArchitecture } from '../utils/aiService';
 
 const BLOCK_TYPES = [
   { type: 'client', label: 'Клиент (Web/App)', icon: '💻', color: '#3b82f6', desc: 'Браузер или смартфон пользователя' },
@@ -60,8 +60,6 @@ export default function SystemDesign() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiFeedback, setAiFeedback] = useState(null);
   const [aiError, setAiError] = useState('');
-  const [showKeyModal, setShowKeyModal] = useState(false);
-  const [customKeyInput, setCustomKeyInput] = useState(getCustomApiKey());
 
   const canvasRef = useRef(null);
 
@@ -234,12 +232,6 @@ export default function SystemDesign() {
     setAiLoading(false);
   };
 
-  const handleSaveKey = (e) => {
-    e.preventDefault();
-    setCustomApiKey(customKeyInput);
-    setShowKeyModal(false);
-  };
-
   return (
     <div className="mx-auto max-w-6xl animate-fade-in px-3 py-6 sm:px-6 sm:py-10">
       {/* Заголовок */}
@@ -257,13 +249,6 @@ export default function SystemDesign() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setShowKeyModal(true)}
-            className="min-h-[38px] rounded-xl border px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--bg-hover)]"
-            style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
-          >
-            ⚙️ API-ключ
-          </button>
           <button
             onClick={handleEvaluateAi}
             disabled={aiLoading || nodes.length === 0}
@@ -561,54 +546,6 @@ export default function SystemDesign() {
         </div>
       )}
 
-      {/* Модалка настроек ключа */}
-      {showKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div
-            className="w-full max-w-md rounded-2xl border p-6 shadow-2xl"
-            style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
-          >
-            <h3 className="mb-2 text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
-              🔑 OpenRouter API-ключ
-            </h3>
-            <p className="mb-4 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              Введите ключ OpenRouter для оценки архитектуры систем с помощью передовых языковых моделей.
-            </p>
-
-            <form onSubmit={handleSaveKey} className="space-y-3">
-              <input
-                type="password"
-                placeholder="sk-or-v1-..."
-                value={customKeyInput}
-                onChange={(e) => setCustomKeyInput(e.target.value)}
-                className="w-full rounded-xl border px-3.5 py-2 font-mono text-xs outline-none"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  borderColor: 'var(--border)',
-                  color: 'var(--text-primary)',
-                }}
-              />
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowKeyModal(false)}
-                  className="min-h-[40px] rounded-xl border px-4 py-2 text-xs font-medium transition"
-                  style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
-                >
-                  Отмена
-                </button>
-                <button
-                  type="submit"
-                  className="min-h-[40px] rounded-xl px-4 py-2 text-xs font-bold text-white transition"
-                  style={{ background: 'var(--accent)' }}
-                >
-                  Сохранить
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

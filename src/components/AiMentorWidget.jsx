@@ -2,8 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useAiMentor } from '../hooks/useAiMentor';
 import {
   AI_ROLES,
-  getCustomApiKey,
-  setCustomApiKey,
   getSelectedModel,
   setSelectedModel,
   fetchAvailableModels,
@@ -64,7 +62,6 @@ export default function AiMentorWidget() {
   } = useAiMentor();
 
   const [inputVal, setInputVal] = useState('');
-  const [customKeyInput, setCustomKeyInput] = useState(getCustomApiKey());
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [modelId, setModelId] = useState(getSelectedModel());
   const [modelSearch, setModelSearch] = useState('');
@@ -114,12 +111,6 @@ export default function AiMentorWidget() {
 
   const handleSuggestionClick = (sugText) => {
     sendMessage(sugText);
-  };
-
-  const handleSaveKey = (e) => {
-    e.preventDefault();
-    setCustomApiKey(customKeyInput);
-    setShowKeyModal(false);
   };
 
   const suggestions = ROLE_SUGGESTIONS[activeRole] || ROLE_SUGGESTIONS.tutor;
@@ -382,7 +373,7 @@ export default function AiMentorWidget() {
         </div>
       )}
 
-      {/* Модальное окно настроек ключа OpenRouter */}
+      {/* Модальное окно настроек AI-наставника */}
       {showKeyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div
@@ -397,9 +388,7 @@ export default function AiMentorWidget() {
             </div>
 
             <p className="mb-4 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              В защищённой продакшен-архитектуре API-ключ настраивается через переменную окружения <code>OPENROUTER_API_KEY</code> на сервере.
-              <br /><br />
-              Для персонального тестирования вы можете указать свой личный ключ OpenRouter (<code>sk-or-v1-...</code>) прямо здесь. Он сохранится локально в вашем браузере.
+              API-ключ настроен через переменную окружения <code>OPENROUTER_API_KEY</code> на сервере.
             </p>
 
             {/* Выбор модели / провайдера через OpenRouter */}
@@ -465,37 +454,16 @@ export default function AiMentorWidget() {
               </div>
             </div>
 
-            <form onSubmit={handleSaveKey} className="space-y-3">
-              <input
-                type="password"
-                placeholder="sk-or-v1-..."
-                value={customKeyInput}
-                onChange={(e) => setCustomKeyInput(e.target.value)}
-                className="w-full rounded-xl border p-3 font-mono text-xs outline-none"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  borderColor: 'var(--border)',
-                  color: 'var(--text-primary)',
-                }}
-              />
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowKeyModal(false)}
-                  className="min-h-[38px] rounded-xl border px-4 py-2 text-xs font-medium transition"
-                  style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
-                >
-                  Отмена
-                </button>
-                <button
-                  type="submit"
-                  className="min-h-[38px] rounded-xl px-4 py-2 text-xs font-bold text-white transition"
-                  style={{ background: 'var(--accent)' }}
-                >
-                  Сохранить ключ
-                </button>
-              </div>
-            </form>
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setShowKeyModal(false)}
+                className="min-h-[38px] rounded-xl px-4 py-2 text-xs font-bold text-white transition"
+                style={{ background: 'var(--accent)' }}
+              >
+                Закрыть
+              </button>
+            </div>
           </div>
         </div>
       )}

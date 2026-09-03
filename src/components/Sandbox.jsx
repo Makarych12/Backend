@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { runPython, isPyodideLoaded } from '../utils/pyodideRunner';
-import { reviewPythonCode, getCustomApiKey, setCustomApiKey } from '../utils/aiService';
+import { reviewPythonCode } from '../utils/aiService';
 import { useAiMentor } from '../hooks/useAiMentor';
 
 export default function Sandbox({ initialCode, bootstrap, description }) {
@@ -15,8 +15,6 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
   const [aiStatus, setAiStatus] = useState('idle'); // idle | loading | success | error | no_key
   const [aiReview, setAiReview] = useState(null);
   const [aiError, setAiError] = useState('');
-  const [customKeyInput, setCustomKeyInput] = useState(getCustomApiKey());
-  const [showKeyModal, setShowKeyModal] = useState(false);
 
   async function handleRun() {
     setStatus(isPyodideLoaded() ? 'running' : 'loading');
@@ -72,13 +70,6 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
       context: `Код в песочнице:\n\`\`\`python\n${code}\n\`\`\`\n\nТекст ошибки (Traceback):\n${errText}\n\nОписание задания:\n${description || 'Упражнение'}`,
       autoSend: true,
     });
-  }
-
-  function handleSaveKey(e) {
-    e.preventDefault();
-    setCustomApiKey(customKeyInput);
-    setShowKeyModal(false);
-    setAiStatus('idle');
   }
 
   const running = status !== 'idle';
@@ -181,15 +172,8 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
                 ⚠️ {aiError}
               </p>
               <p style={{ color: 'var(--text-secondary)' }}>
-                Для работы AI-функций добавьте ключ OpenRouter в переменную окружения <code>OPENROUTER_API_KEY</code> на сервере или укажите личный ключ ниже:
+                Для работы AI-функций добавьте ключ OpenRouter в переменную окружения <code>OPENROUTER_API_KEY</code> на сервере.
               </p>
-              <button
-                onClick={() => setShowKeyModal(true)}
-                className="min-h-[38px] rounded-lg px-3 py-1.5 font-medium transition"
-                style={{ background: 'var(--accent)', color: '#ffffff' }}
-              >
-                ⚙️ Ввести API-ключ OpenRouter
-              </button>
             </div>
           )}
 
@@ -198,55 +182,6 @@ export default function Sandbox({ initialCode, bootstrap, description }) {
               ❌ {aiError}
             </p>
           )}
-        </div>
-      )}
-
-      {/* Модальное окно настройки API-ключа */}
-      {showKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div
-            className="w-full max-w-md rounded-2xl border p-6 shadow-2xl"
-            style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
-          >
-            <h3 className="mb-2 text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
-              🔑 Настройка OpenRouter API-ключа
-            </h3>
-            <p className="mb-4 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              Ключ сохранится только в вашем браузере (<code>localStorage</code>) и будет использоваться для AI-наставника.
-            </p>
-
-            <form onSubmit={handleSaveKey} className="space-y-3">
-              <input
-                type="password"
-                placeholder="sk-or-v1-..."
-                value={customKeyInput}
-                onChange={(e) => setCustomKeyInput(e.target.value)}
-                className="w-full rounded-xl border px-3.5 py-2 font-mono text-xs outline-none"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  borderColor: 'var(--border)',
-                  color: 'var(--text-primary)',
-                }}
-              />
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowKeyModal(false)}
-                  className="min-h-[38px] rounded-xl border px-4 py-2 text-xs font-medium transition"
-                  style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
-                >
-                  Отмена
-                </button>
-                <button
-                  type="submit"
-                  className="min-h-[38px] rounded-xl px-4 py-2 text-xs font-bold text-white transition"
-                  style={{ background: 'var(--accent)' }}
-                >
-                  Сохранить ключ
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
 
