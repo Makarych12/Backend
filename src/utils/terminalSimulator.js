@@ -50,6 +50,7 @@ export function createTerminalSession() {
       ssh: { active: true, enabled: true, pid: 634, desc: 'OpenBSD Secure Shell server' },
     },
     users: new Set(['root', 'user']),
+    nextPid: 4021, // PID для служб, запускаемых учеником — детерминированный, чтобы совпадал с journalctl/ss в уроках
   };
 
   function prompt() {
@@ -230,7 +231,7 @@ export function createTerminalSession() {
         state.aptInstalled.add(pkg);
         if (pkg === 'nginx' || pkg === 'postgresql' || pkg === 'redis-server' || pkg === 'docker.io') {
           const svc = pkg === 'redis-server' ? 'redis' : pkg === 'docker.io' ? 'docker' : pkg;
-          state.services[svc] = state.services[svc] || { active: true, enabled: true, pid: 2000 + Math.floor(Math.random() * 900), desc: `${svc} service` };
+          state.services[svc] = state.services[svc] || { active: true, enabled: true, pid: state.nextPid++, desc: `${svc} service` };
         }
       }
       lines.push(line('Processing triggers for man-db (2.12.0-4build2) ...', 'muted'));
@@ -333,7 +334,7 @@ export function createTerminalSession() {
       if (sub === 'start' || sub === 'restart' || sub === 'reload') {
         svc.active = true;
         svc.failed = false;
-        svc.pid = svc.pid || 2000 + Math.floor(Math.random() * 900);
+        svc.pid = svc.pid || state.nextPid++;
         return ok([]);
       }
       if (sub === 'stop') {
@@ -457,7 +458,7 @@ export function createTerminalSession() {
 
   function ping(args) {
     const countIdx = args.indexOf('-c');
-    const host = args.find((a, i) => !a.startsWith('-') && i !== countIdx + 1);
+    const host = args.find((a, i) => !a.startsWith('-') && (countIdx === -1 || i !== countIdx + 1));
     const count = countIdx !== -1 ? Math.min(Number(args[countIdx + 1]) || 4, 10) : 4;
     if (!host) return fail([line('ping: usage error: Destination address required', 'error')]);
     const known = { 'google.com': '142.250.74.14', '8.8.8.8': '8.8.8.8', 'example.com': '93.184.215.14', localhost: '127.0.0.1', '127.0.0.1': '127.0.0.1', 'github.com': '140.82.121.4', 'ya.ru': '77.88.55.242' };

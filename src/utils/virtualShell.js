@@ -33,10 +33,14 @@ const DEFAULT_PROCESSES = [
 
 const MAX_SCRIPT_STEPS = 5000;
 
+// `exit` внутри скрипта: исключение несёт код и вывод, накопленный до него (чтобы
+// `echo "ошибка"; exit 1` не терял напечатанную строку).
 class ShellExit extends Error {
   constructor(code) {
     super('exit');
     this.code = code;
+    this.stdout = '';
+    this.stderr = '';
   }
 }
 
@@ -254,7 +258,7 @@ export class VirtualShell {
     try {
       res = this._runLine(raw, null);
     } catch (e) {
-      if (e instanceof ShellExit) res = result('', '', e.code);
+      if (e instanceof ShellExit) res = result(e.stdout, e.stderr, e.code);
       else res = errorResult(`bash: внутренняя ошибка: ${e.message}`);
     }
     if (res.clear) {
@@ -349,7 +353,14 @@ export class VirtualShell {
       }
       if (ch === '$' || ch === '`') {
         const exp = this._expandDollar(line, i);
-        append(exp.text);
+        // Вне кавычек результат подстановки делится на слова по пробелам — как в bash:
+        // for f in $(ls logs) даёт три слова, а не одно.
+        const pieces = exp.text.split(/\s+/);
+        pieces.forEach((piece, idx) => {
+          if (idx > 0) push();
+          if (piece) append(piece);
+        });
+        if (/\s$/.test(exp.text)) push();
         i = exp.next;
         continue;
       }
@@ -468,16 +479,24 @@ export class VirtualShell {
       if (item.joiner === '&&' && last.code !== 0) continue;
       if (item.joiner === '||' && last.code === 0) continue;
       if (!item.text.trim()) continue;
-      // for / if, набранные прямо в строке приглашения — это уже скрипт: отдаём ему
-      // весь остаток строки (там же лежат do/done/then/fi)
-      if (/^(for|if|while|until)\s/.test(item.text.trim())) {
-        const rest = lists.slice(k).map((it, idx) => (idx === 0 ? '' : it.joiner) + it.text).join('');
-        last = this._runScript(rest, this._positional, stdin, 'bash');
-        stdout += last.stdout;
-        stderr += last.stderr;
-        break;
+      try {
+        // for / if, набранные прямо в строке приглашения — это уже скрипт: отдаём ему
+        // весь остаток строки (там же лежат do/done/then/fi)
+        if (/^(for|if|while|until)\s/.test(item.text.trim())) {
+          const rest = lists.slice(k).map((it, idx) => (idx === 0 ? '' : it.joiner) + it.text).join('');
+          last = this._runScript(rest, this._positional, stdin, 'bash');
+          stdout += last.stdout;
+          stderr += last.stderr;
+          break;
+        }
+        last = this._runPipeline(item.text, stdin);
+      } catch (e) {
+        if (e instanceof ShellExit) {
+          e.stdout = stdout + e.stdout;
+          e.stderr = stderr + e.stderr;
+        }
+        throw e;
       }
-      last = this._runPipeline(item.text, stdin);
       if (last.clear) clear = true;
       stdout += last.stdout;
       stderr += last.stderr;
@@ -603,7 +622,7 @@ export class VirtualShell {
       const { nodes } = parseBlock(statements, 0, []);
       return this._execNodes(nodes, stdin);
     } catch (e) {
-      if (e instanceof ShellExit) return result('', '', e.code);
+      if (e instanceof ShellExit) return result(e.stdout, e.stderr, e.code);
       return errorResult(`${name}: ${e.message}`, 2);
     } finally {
       this._positional = savedPositional;
@@ -621,6 +640,21 @@ export class VirtualShell {
       code = r.code;
     };
     for (const node of nodes) {
+      try {
+        this._execNode(node, stdin, collect);
+      } catch (e) {
+        if (e instanceof ShellExit) {
+          e.stdout = stdout + e.stdout;
+          e.stderr = stderr + e.stderr;
+        }
+        throw e;
+      }
+    }
+    return { stdout, stderr, code };
+  }
+
+  _execNode(node, stdin, collect) {
+    {
       if (node.kind === 'cmd') {
         collect(this._runLine(node.text, stdin));
       } else if (node.kind === 'for') {
@@ -635,7 +669,7 @@ export class VirtualShell {
         let done = false;
         for (const branch of node.branches) {
           const cond = this._runLine(branch.cond, stdin);
-          stderr += cond.stderr;
+          if (cond.stderr) collect({ stdout: '', stderr: cond.stderr, code: cond.code });
           if (cond.code === 0) {
             collect(this._execNodes(branch.body, stdin));
             done = true;
@@ -645,7 +679,6 @@ export class VirtualShell {
         if (!done && node.elseBody) collect(this._execNodes(node.elseBody, stdin));
       }
     }
-    return { stdout, stderr, code };
   }
 }
 
@@ -944,6 +977,33 @@ const COMMANDS = {
     return result(newline ? text + '\n' : text);
   },
 
+  printf(args) {
+    if (args.length === 0) return errorResult('printf: usage: printf [-v var] format [arguments]', 2);
+    const [format, ...rest] = args;
+    const unescape = (t) => t.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+    const slots = (format.match(/%[sd]/g) || []).length;
+    if (slots === 0) return result(unescape(format));
+    let out = '';
+    // формат применяется повторно, пока не кончатся аргументы — как в настоящем printf
+    for (let i = 0; i < Math.max(1, Math.ceil(rest.length / slots)); i++) {
+      let k = i * slots;
+      out += unescape(format.replace(/%[sd]/g, () => rest[k++] ?? ''));
+    }
+    return result(out);
+  },
+
+  nano(args) {
+    return editorStub('nano', args);
+  },
+
+  vim(args) {
+    return editorStub('vim', args);
+  },
+
+  vi(args) {
+    return editorStub('vi', args);
+  },
+
   mkdir(args) {
     const { flags, positional } = parseFlags(args);
     if (positional.length === 0) return errorResult('mkdir: missing operand');
@@ -1182,10 +1242,11 @@ const COMMANDS = {
         if (!hit) return;
         count++;
         matched = true;
-        if (flags.has('c') || flags.has('l')) return;
+        if (flags.has('c') || flags.has('l') || flags.has('q')) return;
         const prefix = (showLabel ? `${label}:` : '') + (flags.has('n') ? `${idx + 1}:` : '');
         out += prefix + row + '\n';
       });
+      if (flags.has('q')) return;
       if (flags.has('c')) out += (showLabel ? `${label}:` : '') + count + '\n';
       else if (flags.has('l') && count > 0) out += label + '\n';
     };
@@ -1282,10 +1343,12 @@ const COMMANDS = {
     const which = flags.size ? flags : new Set(['l', 'w', 'c']);
     const fmt = (text, label) => {
       const cols = [];
-      if (which.has('l')) cols.push(String((text.match(/\n/g) || []).length).padStart(7));
-      if (which.has('w')) cols.push(String(text.split(/\s+/).filter(Boolean).length).padStart(7));
-      if (which.has('c')) cols.push(String(text.length).padStart(7));
-      return cols.join('') + (label ? ` ${label}` : '') + '\n';
+      if (which.has('l')) cols.push(String((text.match(/\n/g) || []).length));
+      if (which.has('w')) cols.push(String(text.split(/\s+/).filter(Boolean).length));
+      if (which.has('c')) cols.push(String(text.length));
+      // как в GNU wc: одно число со stdin печатается без отступа (wc -l < file → "3")
+      if (!label && cols.length === 1) return cols[0] + '\n';
+      return cols.map((c) => c.padStart(7)).join('') + (label ? ` ${label}` : '') + '\n';
     };
     if (positional.length === 0) return result(fmt(stdin ?? '', ''));
     let out = '';
@@ -1672,6 +1735,16 @@ VirtualShell.prototype._readAll = function (files, tool) {
   }
   return { text };
 };
+
+function editorStub(name, args) {
+  const file = args.find((a) => !a.startsWith('-')) || 'файл';
+  return errorResult(
+    `${name}: в учебном терминале нет полноэкранного редактора.\n` +
+      `На сервере ${name} ${file} открыл бы файл для правки; здесь строки добавляют так:\n` +
+      `  echo 'строка' >> ${file}      # дописать в конец\n` +
+      `  cat ${file}                  # проверить, что получилось`
+  );
+}
 
 function headTail(which, args, stdin) {
   let count = 10;
