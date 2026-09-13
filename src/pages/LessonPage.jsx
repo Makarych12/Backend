@@ -5,6 +5,8 @@ import { useAiMentor } from '../hooks/useAiMentor';
 import CodeBlock from '../components/CodeBlock';
 import Sandbox from '../components/Sandbox';
 import Terminal from '../components/Terminal';
+import LinuxLab from '../components/LinuxLab';
+import LinuxTerminal from '../components/LinuxTerminal';
 import CommandExplainer from '../components/CommandExplainer';
 import TaskCard from '../components/TaskCard';
 import MistakesList from '../components/MistakesList';
@@ -36,6 +38,17 @@ function TheoryBlock({ block }) {
           lessonCommands={block.lessonCommands}
           suggestions={block.suggestions}
           welcome={block.welcome}
+        />
+      );
+    case 'linuxTerminal':
+      return (
+        <LinuxTerminal
+          title={block.title}
+          initialFs={block.initialFs}
+          processes={block.processes}
+          cwd={block.cwd}
+          welcome={block.welcome}
+          suggestions={block.suggestions}
         />
       );
     case 'steps':
@@ -219,6 +232,12 @@ export default function LessonPage() {
               welcome={lesson.terminal.welcome}
             />
           </div>
+        </Section>
+      )}
+
+      {lesson.linuxLab && (
+        <Section number={num()} title={lesson.linuxLab.sectionTitle || 'Практика в терминале'}>
+          <LinuxLab lab={lesson.linuxLab} />
         </Section>
       )}
 

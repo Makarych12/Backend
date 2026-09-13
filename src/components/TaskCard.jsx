@@ -56,7 +56,7 @@ export default function TaskCard({ task }) {
               >
                 Скрыть решение
               </button>
-              <CodeBlock code={task.solution} lang="python" title="Возможное решение" />
+              <CodeBlock code={task.solution} lang={task.lang || 'python'} title="Возможное решение" />
             </div>
           )}
         </div>

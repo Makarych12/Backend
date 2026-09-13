@@ -211,6 +211,66 @@ await pyodide.runPythonAsync(`ТУТ sandbox.initialCode`, { globals: ns });
   симулятора (для `pip install`, `uvicorn`); если задан — используется дословно (нужно для команд,
   которые симулятор не знает, например `alembic ...` или гипотетический `python check.py`)
 
+### Виртуальный Linux-терминал (`linuxLab`) — для модулей про Linux
+
+Инфраструктура готова (сделана по `LINUX_MODULE_SPEC.md`, сами модули 32-33 — только по явной
+просьбе, см. там же). В отличие от `terminal` (заготовленные ответы) это **настоящий маленький
+интерпретатор** поверх файловой системы в памяти — `src/utils/virtualShell.js`, класс
+`VirtualShell`:
+
+- Команды с реальной логикой: `pwd ls cd cat mkdir touch rm cp mv chmod chown echo grep find wc
+  head tail sort uniq cut tr xargs tee ps top kill pkill whoami sudo su history env export tree
+  file stat man`; конвейеры `|`, перенаправления `> >> < 2> 2>&1`, связки `&& || ;`, переменные
+  `$VAR`/`${VAR}`/`$?`, подстановка `$(cmd)`, арифметика `$((1+2))`, шаблоны `*.txt`, `~`.
+- Права проверяются честно (владелец/остальные, `r/w/x`, `root` через `sudo`), ошибки — как в
+  настоящем bash (`command not found`, `No such file or directory`, `Permission denied`).
+- Bash-скрипты: `./script.sh` (нужен `x`), `bash script.sh`; поддержаны `for … in …; do … done`,
+  `if/elif/else/fi` с `[ -f ]`/`[ -d ]`/`=`/`-eq` и т.д., `$1`/`$#`, `exit`. `while` намеренно
+  НЕ поддержан (защита от зависания вкладки), есть лимит в 5000 команд на один запуск.
+- Процессы — фейковый список `processes` (`ps`, `ps aux`, `top`, `kill`, `pkill`), по умолчанию
+  `DEFAULT_PROCESSES` в том же файле; урок может передать свой список.
+- Формат `initialFs` короткий: объект без `type` = каталог, строка = файл; полная форма
+  `{ type: 'file', content, mode: '600', owner: 'root' }` — когда нужны права/владелец. Всё в
+  `/home/user` по умолчанию принадлежит `user`, остальное — `root`.
+- Помощники для проверки заданий: `shell.readFile(p)`, `exists(p)`, `isDir(p)`, `isFile(p)`,
+  `listDir(p)`, `getNode(p)` (→ `{type, content|children, mode, owner}`), `getProcess(pid)`,
+  `shell.processes`, `shell.cwd`, `shell.lastOutput`, `shell.lastError`, `shell.lastExitCode`.
+
+Компоненты: `src/components/LinuxTerminal.jsx` (сам терминал, свободный ввод, история по
+стрелкам, кнопка «Сбросить») и `src/components/LinuxLab.jsx` (цель + терминал + мгновенная
+галочка «Готово» + подсказка + решение). `LessonPage.jsx` рендерит поле урока `linuxLab` как
+отдельную секцию «Практика в терминале», а в `theory` можно вставить блок
+`{ type: 'linuxTerminal', initialFs, welcome?, suggestions? }` — терминал без проверки.
+
+```js
+linuxLab: {
+  initialFs: { home: { user: { 'old.txt': 'текст', archive: {} } } },
+  processes: [...],            // необязательно, для уроков про ps/kill
+  goal: 'Переименуй old.txt в new.txt и перемести его в archive',
+  check: (shell) => shell.readFile('/home/user/archive/new.txt') === 'текст', // ТОЛЬКО результат
+  hint: 'mv умеет и переименовывать, и перемещать — за один раз',
+  solution: 'mv old.txt archive/new.txt',
+  suggestions: ['ls', 'mv old.txt archive/new.txt'],   // необязательно
+  welcome: 'Ты в домашнем каталоге. Начни с ls.',        // необязательно
+}
+```
+
+`check()` вызывается после КАЖДОЙ команды — проверяй состояние, а не текст команды. Если `check`
+бросит исключение, страница не упадёт (задание просто считается невыполненным).
+
+Симулятор `terminalSimulator.js` (обычный `terminal`) расширен для теории Linux-модулей: `sudo`,
+`apt`/`apt-get` (update/upgrade/install/remove/list/search/show), `systemctl`
+(status/start/stop/restart/enable/disable/is-active/list-units), `journalctl [-u svc] [-f]`,
+`curl` (localhost:8000 отвечает только если служба `myapp` запущена), `ping`, `ip a/r`,
+`ss`/`netstat`, `useradd`/`adduser`/`userdel`/`passwd`/`usermod`, `ufw`, `ssh`, `df`, `free`,
+`uptime`, `uname`, `cat /etc/os-release`. Без `sudo` административные команды честно
+отказывают с подсказкой. Службы по умолчанию: `nginx`, `postgresql`, `ssh` (запущены), `myapp`
+(остановлена — чтобы `systemctl start myapp` было чем заняться).
+
+Проверка `VirtualShell` без браузера: `node` напрямую импортирует `src/utils/virtualShell.js`
+(чистый ESM без зависимостей) — при доработке шелла прогони свой набор команд так же, как
+песочницы через Pyodide.
+
 ### Требования к дизайну (уже реализованы, не переделывать)
 
 - Светлая и тёмная тема, переключатель в шапке (`ThemeToggle.jsx`, иконка ☀️/🌙), тема хранится
@@ -258,6 +318,8 @@ await pyodide.runPythonAsync(`ТУТ sandbox.initialCode`, { globals: ns });
 | 29 | Пагинация, фильтрация и полнотекстовый поиск | Готово | `src/data/modules/module29.js` |
 | 30 | CI/CD: автотесты и деплой с GitHub Actions | Готово | `src/data/modules/module30.js` |
 | 31 | Мониторинг и трекинг ошибок: Sentry и Prometheus | Готово | `src/data/modules/module31.js` |
+| 32 | Linux и терминал с нуля | Готово | `src/data/modules/module32.js` |
+| 33 | Linux для бэкенд-разработчика | Не начат (ТЗ в `LINUX_MODULE_SPEC.md`) | — |
 
 Итоговые проекты (портфолио) — **Готово** (4 проекта в `src/data/projects.js` и `/projects`).
 Английский для backend-разработчика — **Готово** (`src/pages/EnglishForDevs.jsx`, `src/data/englishData.js` и `/english`).
@@ -269,7 +331,7 @@ System Design песочница (Drag-and-Drop) — **Готово** (`src/page
 Генератор резюме/портфолио («Моё резюме») — **Готово** (`src/pages/ResumeBuilder.jsx` и `/resume-builder`).
 Геймификация (Бейджи, Стрики, Лидерборд) — **Готово** (`src/components/GamificationWidget.jsx`, `src/utils/gamification.js`).
 
-Все 31 модуль и все 7 спецразделов платформы полностью реализованы и проверены: `npm run build` и `npm run lint` проходят чисто (0 ошибок и 0 предупреждений).
+Все 32 модуля и все 7 спецразделов платформы полностью реализованы и проверены: `npm run build` и `npm run lint` проходят чисто (0 ошибок и 0 предупреждений).
 
 ## Что нужно сделать дальше — КОНКРЕТНО
 
@@ -497,7 +559,8 @@ features: [...], interviewFocus: [...] }`. Проекты описаны как 
 
 ## Результаты полного сквозного тестирования платформы
 
-- **Модули и уроки:** Все 31 модуль (109 уроков) полностью проверены.
+- **Модули и уроки:** Все 32 модуля (113 уроков) полностью проверены.
+- **Linux-лаборатории (`linuxLab`, модуль 32):** каждая `check()` прогнана в Node через `VirtualShell` на 54 сценариях — по 8-13 разных правильных и неправильных решений на урок (`mv` одной командой / в два шага / `cp`+`rm`; `chmod +x` / `755` / `u+x`; `kill` / `kill -9` / `pkill` / `top`; `grep -r` / `cat | grep` / `find | xargs grep`) — засчитывается результат, а не текст команды.
 - **Песочницы (Pyodide):** Все 96 песочниц исполняются без ошибок (96/96 passed).
 - **Синтаксис Python примеров:** Все 212 примеров кода проверены через AST-парсер (0 синтаксических ошибок).
 - **Сборка и линтинг:** `npm run lint` (0 warnings, 0 errors), `npm run build` проходит за ~800мс.
