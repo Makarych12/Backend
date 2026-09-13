@@ -19,6 +19,7 @@ function Dots() {
  * «Сбросить» вызывается onStateChange(freshShell, { reset: true }).
  *
  * `initialFs` — стартовое дерево файлов (формат описан в utils/virtualShell.js),
+ * `initialRepo` — стартовое состояние учебного git (формат в utils/gitEngine.js),
  * `processes` — необязательный список фейковых процессов для ps/top/kill,
  * `cwd` — стартовый каталог (по умолчанию /home/user).
  */
@@ -27,11 +28,13 @@ export default function LinuxTerminal({
   initialFs,
   processes,
   cwd,
+  initialRepo,
   welcome,
   suggestions = [],
   onStateChange,
 }) {
-  const [shell, setShell] = useState(() => new VirtualShell(initialFs, { processes, cwd }));
+  const makeShell = () => new VirtualShell(initialFs, { processes, cwd, git: initialRepo });
+  const [shell, setShell] = useState(makeShell);
   const [history, setHistory] = useState([]);
   const [input, setInput] = useState('');
   const [histIndex, setHistIndex] = useState(-1);
@@ -83,7 +86,7 @@ export default function LinuxTerminal({
   }
 
   function handleReset() {
-    const fresh = new VirtualShell(initialFs, { processes, cwd });
+    const fresh = makeShell();
     setShell(fresh);
     setHistory([]);
     setInput('');

@@ -1,10 +1,30 @@
 import { useState } from 'react';
 import LinuxTerminal from './LinuxTerminal';
+import GitGraph from './GitGraph';
 import Hint from './Hint';
 import CodeBlock from './CodeBlock';
 
+// Снимок графа коммитов для GitGraph — простые данные, без ссылок на движок.
+function snapshotGit(git) {
+  return {
+    commits: git.order.map((id) => ({ id, parentIds: git.commits[id].parentIds, message: git.commits[id].message })),
+    branches: { ...git.branches },
+    head: git.head,
+    merging: git.mergeState ? git.mergeState.branch : null,
+  };
+}
+
+function snapshotFromRepo(repo) {
+  return {
+    commits: (repo.commits ?? []).map((c) => ({ id: c.id, parentIds: c.parentIds ?? [], message: c.message })),
+    branches: { ...(repo.branches ?? {}) },
+    head: repo.HEAD ?? 'main',
+    merging: null,
+  };
+}
+
 /**
- * Практическое задание в виртуальном Linux-терминале (поле урока `linuxLab`).
+ * Практическое задание в виртуальном Linux-терминале (поле урока `linuxLab` или `gitLab`).
  * Проверка мгновенная: после каждой команды вызывается lab.check(shell) — как только она
  * вернула true, показывается зелёная галочка "Готово" (и остаётся до кнопки "Сбросить"). Проверяется РЕЗУЛЬТАТ (состояние файлов,
  * процессов, вывод), а не текст команды — любой правильный способ засчитывается.
@@ -13,8 +33,10 @@ export default function LinuxLab({ lab }) {
   const [done, setDone] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
   const [checkError, setCheckError] = useState(null);
+  const [gitSnapshot, setGitSnapshot] = useState(null);
 
   function handleStateChange(shell, meta) {
+    if (lab.initialRepo) setGitSnapshot(shell.git ? snapshotGit(shell.git) : null);
     if (meta?.reset) {
       setDone(false);
       setCheckError(null);
@@ -72,10 +94,13 @@ export default function LinuxLab({ lab }) {
         initialFs={lab.initialFs}
         processes={lab.processes}
         cwd={lab.cwd}
+        initialRepo={lab.initialRepo}
         welcome={lab.welcome}
         suggestions={lab.suggestions}
         onStateChange={handleStateChange}
       />
+
+      {lab.initialRepo && <GitGraph snapshot={gitSnapshot ?? snapshotFromRepo(lab.initialRepo)} />}
 
       {checkError && (
         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>

@@ -47,6 +47,7 @@ function TheoryBlock({ block }) {
           initialFs={block.initialFs}
           processes={block.processes}
           cwd={block.cwd}
+          initialRepo={block.initialRepo}
           welcome={block.welcome}
           suggestions={block.suggestions}
         />
@@ -238,6 +239,12 @@ export default function LessonPage() {
       {lesson.linuxLab && (
         <Section number={num()} title={lesson.linuxLab.sectionTitle || 'Практика в терминале'}>
           <LinuxLab lab={lesson.linuxLab} />
+        </Section>
+      )}
+
+      {lesson.gitLab && (
+        <Section number={num()} title={lesson.gitLab.sectionTitle || 'Практика с Git'}>
+          <LinuxLab lab={lesson.gitLab} />
         </Section>
       )}
 

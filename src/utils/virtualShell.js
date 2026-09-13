@@ -18,6 +18,8 @@
 // Каждый узел после нормализации: { type: 'dir', children, mode, owner } или
 // { type: 'file', content, mode, owner }. mode — три восьмеричные цифры ('644'), owner — имя.
 
+import { GitEngine } from './gitEngine.js';
+
 const DEFAULT_USER = 'user';
 const HOSTNAME = 'backend';
 const KNOWN_USERS = new Set(['root', 'user', 'www-data', 'postgres', 'nobody', 'deploy', 'app']);
@@ -167,6 +169,13 @@ export class VirtualShell {
     this.vars = { HOME: this.home, USER: this.user, PATH: '/usr/local/bin:/usr/bin:/bin', SHELL: '/bin/bash', PWD: this.cwd };
     this.processes = cloneDeep(this.initialOptions.processes ?? DEFAULT_PROCESSES);
     this.history = [];
+    // Учебный git (см. gitEngine.js): при наличии initialRepo репозиторий готов сразу,
+    // иначе появится после `git init`.
+    this.git = null;
+    if (this.initialOptions.git) {
+      this.git = new GitEngine(this, cloneDeep(this.initialOptions.git));
+      if (this.initialOptions.cwd === undefined) this.cwd = this.git.root;
+    }
     this.lastOutput = '';
     this.lastError = null;
     this.lastExitCode = 0;
@@ -1002,6 +1011,11 @@ const COMMANDS = {
 
   vi(args) {
     return editorStub('vi', args);
+  },
+
+  git(args) {
+    if (!this.git) this.git = new GitEngine(this, { root: this.cwd });
+    return this.git.run(args);
   },
 
   mkdir(args) {

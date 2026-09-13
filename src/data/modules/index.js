@@ -32,6 +32,7 @@ import { module31 } from './module31';
 import { module32 } from './module32';
 import { module33 } from './module33';
 import { module34 } from './module34';
+import { module36 } from './module36';
 
 export const modules = [
   module1,
@@ -68,6 +69,7 @@ export const modules = [
   module32,
   module33,
   module34,
+  module36,
 ];
 
 export function findModule(moduleId) {
