@@ -4,6 +4,7 @@ import { useProgress, moduleProgress, overallProgress } from '../hooks/useProgre
 import ProgressBar from './ProgressBar';
 import ThemeToggle from './ThemeToggle';
 import GamificationWidget from './GamificationWidget';
+import BackendPulseButton from './BackendPulseButton';
 
 export default function Sidebar({ open, onClose }) {
   const { completed } = useProgress();
@@ -19,14 +20,15 @@ export default function Sidebar({ open, onClose }) {
         }`}
         style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}
       >
-        <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: 'var(--border)' }}>
+        <div className="flex items-center justify-between border-b px-4 py-3.5" style={{ borderColor: 'var(--border)' }}>
           <NavLink to="/" onClick={onClose} className="flex items-center gap-2">
             <span className="text-xl">🐍</span>
-            <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+            <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
               Python с нуля
             </span>
           </NavLink>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            <BackendPulseButton compact={true} />
             <ThemeToggle />
             <button onClick={onClose} className="text-lg md:hidden" style={{ color: 'var(--text-muted)' }}>
               ✕

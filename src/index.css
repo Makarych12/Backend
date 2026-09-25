@@ -214,3 +214,24 @@ pre[class*="language-"] {
 .animate-cursor-blink {
   animation: blink 1s step-start infinite;
 }
+
+@keyframes backendShimmer {
+  0% { transform: translateX(-150%); }
+  50%, 100% { transform: translateX(250%); }
+}
+.animate-backend-shimmer {
+  animation: backendShimmer 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes backendGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.35), 0 0 20px rgba(99, 102, 241, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(16, 185, 129, 0.65), 0 0 35px rgba(99, 102, 241, 0.35);
+  }
+}
+.animate-backend-glow {
+  animation: backendGlow 3s ease-in-out infinite;
+}
+

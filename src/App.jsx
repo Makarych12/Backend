@@ -17,6 +17,7 @@ import ResumeBuilder from './pages/ResumeBuilder';
 
 import { AiMentorProvider } from './context/AiMentorContext';
 import AiMentorWidget from './components/AiMentorWidget';
+import BackendPulseButton from './components/BackendPulseButton';
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -29,22 +30,34 @@ export default function App() {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header
-            className="sticky top-0 z-20 flex items-center gap-3 border-b px-4 py-3 backdrop-blur md:hidden"
-            style={{ borderColor: 'var(--border)', background: 'color-mix(in srgb, var(--bg) 90%, transparent)' }}
+            className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b px-4 py-2.5 backdrop-blur sm:px-6"
+            style={{ borderColor: 'var(--border)', background: 'color-mix(in srgb, var(--bg) 88%, transparent)' }}
           >
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="rounded-md p-1.5 transition hover:bg-[var(--bg-hover)]"
-              style={{ color: 'var(--text-secondary)' }}
-              aria-label="Открыть меню"
-            >
-              ☰
-            </button>
-            <span className="flex-1 font-medium" style={{ color: 'var(--text-primary)' }}>
-              🐍 Python с нуля
-            </span>
-            <GamificationWidget />
-            <ThemeToggle />
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="rounded-md p-1.5 transition hover:bg-[var(--bg-hover)] md:hidden cursor-pointer"
+                style={{ color: 'var(--text-secondary)' }}
+                aria-label="Открыть меню"
+              >
+                ☰
+              </button>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="font-semibold text-sm sm:text-base tracking-tight truncate" style={{ color: 'var(--text-primary)' }}>
+                  🐍 Python с нуля
+                </span>
+                <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Backend Platform
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <BackendPulseButton />
+              <GamificationWidget />
+              <ThemeToggle />
+            </div>
           </header>
 
           <main key={location.pathname} className="flex-1">
