@@ -54,13 +54,13 @@ export default function Home() {
           <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
             Твой прогресс
           </span>
-          <div className="flex items-center gap-3">
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-3 sm:w-auto">
             <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               {overall.done} из {overall.total} уроков
             </span>
             <button
               onClick={handleAskNavigator}
-              className="flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 transition hover:bg-indigo-500/20"
+              className="flex max-w-full items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-left text-xs font-semibold text-indigo-600 dark:text-indigo-400 transition hover:bg-indigo-500/20"
             >
               <span>🧭</span>
               <span>Что делать дальше? (Совет AI)</span>

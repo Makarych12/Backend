@@ -294,7 +294,7 @@ export default function AiMentorWidget() {
                     </div>
                   )}
                   <div
-                    className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed whitespace-pre-wrap ${
+                    className={`max-w-[85%] break-words rounded-2xl p-3 text-xs leading-relaxed whitespace-pre-wrap ${
                       isAssistant
                         ? msg.isWarning
                           ? 'border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400'

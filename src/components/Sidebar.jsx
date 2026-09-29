@@ -15,7 +15,7 @@ export default function Sidebar({ open, onClose }) {
     <>
       {open && <div onClick={onClose} className="fixed inset-0 z-30 bg-black/60 md:hidden" aria-hidden="true" />}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-72 shrink-0 flex-col border-r transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-[min(18rem,100vw)] shrink-0 flex-col border-r transition-transform md:sticky md:top-0 md:h-screen md:w-72 md:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}
@@ -28,7 +28,7 @@ export default function Sidebar({ open, onClose }) {
             </span>
           </NavLink>
           <div className="flex items-center gap-1.5">
-            <BackendPulseButton compact={true} />
+            <div className="hidden md:block"><BackendPulseButton compact={true} /></div>
             <ThemeToggle />
             <button onClick={onClose} className="text-lg md:hidden" style={{ color: 'var(--text-muted)' }}>
               ✕
@@ -36,7 +36,7 @@ export default function Sidebar({ open, onClose }) {
           </div>
         </div>
 
-        <div className="border-b px-5 py-3.5 space-y-2.5" style={{ borderColor: 'var(--border)' }}>
+        <div className="shrink-0 border-b px-5 py-3.5 space-y-2.5" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center justify-between">
             <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
               <span>Прогресс: </span>
@@ -47,9 +47,10 @@ export default function Sidebar({ open, onClose }) {
             <GamificationWidget />
           </div>
           <ProgressBar pct={overall.pct} size="sm" />
+          <BackendPulseButton compact className="w-full justify-center md:hidden" />
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-3">
+        <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-3">
           {modules.map((module) => {
             const mp = moduleProgress(module, completed);
             const isActive = module.id === activeModuleId;
@@ -107,7 +108,7 @@ export default function Sidebar({ open, onClose }) {
           })}
         </nav>
 
-        <div className="space-y-1 border-t px-3 py-3" style={{ borderColor: 'var(--border)' }}>
+        <div className="max-h-[35dvh] shrink-0 space-y-1 overflow-y-auto border-t px-3 py-3 md:max-h-none" style={{ borderColor: 'var(--border)' }}>
           <NavLink
             to="/cheatsheets"
             onClick={onClose}

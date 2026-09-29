@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 
 export default function BackendPulseButton({ compact = false, className = '' }) {
@@ -74,14 +75,14 @@ export default function BackendPulseButton({ compact = false, className = '' }) 
       </button>
 
       {/* Интерактивное модальное окно Backend Hub / Telemetry */}
-      {modalOpen && (
+      {modalOpen && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 backdrop-blur-md animate-fade-in sm:p-4"
           style={{ background: 'rgba(0, 0, 0, 0.7)' }}
           onClick={() => setModalOpen(false)}
         >
           <div
-            className="relative w-full max-w-2xl overflow-hidden rounded-2xl border shadow-2xl transition-all"
+            className="relative flex max-h-[calc(100dvh-1rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border shadow-2xl transition-all sm:max-h-[calc(100dvh-2rem)]"
             style={{
               borderColor: 'var(--border-strong)',
               background: 'var(--bg-elevated)',
@@ -94,17 +95,17 @@ export default function BackendPulseButton({ compact = false, className = '' }) 
             <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-indigo-500/15 blur-3xl pointer-events-none" />
 
             {/* Шапка модального окна */}
-            <div className="flex items-center justify-between border-b px-6 py-4" style={{ borderColor: 'var(--border)' }}>
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500 to-indigo-600 text-white shadow-md shadow-emerald-500/20">
+            <div className="flex shrink-0 items-start justify-between gap-2 border-b px-3 py-3 sm:items-center sm:px-6 sm:py-4" style={{ borderColor: 'var(--border)' }}>
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500 to-indigo-600 text-white shadow-md shadow-emerald-500/20">
                   <span className="text-xl">⚡</span>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                    <h2 className="text-sm font-bold sm:text-lg" style={{ color: 'var(--text-primary)' }}>
                       Backend Engine & Platform
                     </h2>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-500">
+                    <span className="hidden items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-500 sm:inline-flex">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       LIVE 200 OK
                     </span>
@@ -117,7 +118,7 @@ export default function BackendPulseButton({ compact = false, className = '' }) 
 
               <button
                 onClick={() => setModalOpen(false)}
-                className="rounded-lg p-2 transition hover:bg-[var(--bg-hover)] text-lg"
+                className="shrink-0 rounded-lg p-2 transition hover:bg-[var(--bg-hover)] text-lg"
                 style={{ color: 'var(--text-muted)' }}
                 aria-label="Закрыть"
               >
@@ -126,9 +127,9 @@ export default function BackendPulseButton({ compact = false, className = '' }) 
             </div>
 
             {/* Контент модального окна */}
-            <div className="max-h-[75vh] overflow-y-auto px-6 py-5 space-y-6">
+            <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 space-y-6 sm:px-6 sm:py-5">
               {/* Блок живой телеметрии сервера */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid gap-3 min-[420px]:grid-cols-2 sm:grid-cols-4">
                 <div className="rounded-xl border p-3 text-center" style={{ borderColor: 'var(--border)', background: 'var(--bg-secondary)' }}>
                   <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: 'var(--text-muted)' }}>
                     Сервер
@@ -336,8 +337,8 @@ export default function BackendPulseButton({ compact = false, className = '' }) 
             </div>
 
             {/* Подвал модального окна */}
-            <div className="flex items-center justify-between border-t px-6 py-3.5" style={{ borderColor: 'var(--border)', background: 'var(--bg-secondary)' }}>
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            <div className="flex shrink-0 items-center justify-end border-t px-3 py-3 sm:justify-between sm:px-6 sm:py-3.5" style={{ borderColor: 'var(--border)', background: 'var(--bg-secondary)' }}>
+              <span className="hidden text-xs sm:inline" style={{ color: 'var(--text-muted)' }}>
                 💡 Нажми <kbd className="rounded border px-1.5 py-0.5 font-mono text-[10px]" style={{ borderColor: 'var(--border)' }}>Esc</kbd> для закрытия
               </span>
               <button
@@ -348,7 +349,7 @@ export default function BackendPulseButton({ compact = false, className = '' }) 
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body
       )}
     </>
   );

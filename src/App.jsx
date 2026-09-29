@@ -30,13 +30,13 @@ export default function App() {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header
-            className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b px-4 py-2.5 backdrop-blur sm:px-6"
+            className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b px-3 py-2.5 backdrop-blur sm:gap-3 sm:px-6"
             style={{ borderColor: 'var(--border)', background: 'color-mix(in srgb, var(--bg) 88%, transparent)' }}
           >
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="rounded-md p-1.5 transition hover:bg-[var(--bg-hover)] md:hidden cursor-pointer"
+                className="shrink-0 rounded-md p-1.5 transition hover:bg-[var(--bg-hover)] md:hidden cursor-pointer"
                 style={{ color: 'var(--text-secondary)' }}
                 aria-label="Открыть меню"
               >
@@ -46,16 +46,16 @@ export default function App() {
                 <span className="font-semibold text-sm sm:text-base tracking-tight truncate" style={{ color: 'var(--text-primary)' }}>
                   🐍 Python с нуля
                 </span>
-                <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                <span className="hidden lg:inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Backend Platform
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              <BackendPulseButton />
-              <GamificationWidget />
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+              <div className="hidden sm:block"><BackendPulseButton /></div>
+              <div className="hidden sm:block"><GamificationWidget /></div>
               <ThemeToggle />
             </div>
           </header>

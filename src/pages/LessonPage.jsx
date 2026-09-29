@@ -70,7 +70,7 @@ function TheoryBlock({ block }) {
                   {i + 1}
                 </span>
                 <code
-                  className="shrink-0 rounded px-2 py-1 font-mono text-[13px] font-medium sm:min-w-[40%]"
+                  className="max-w-full overflow-x-auto rounded px-2 py-1 font-mono text-[13px] font-medium sm:min-w-[40%] sm:shrink-0"
                   style={{ background: 'var(--code-bg)', color: 'var(--accent)' }}
                 >
                   {step.code}
