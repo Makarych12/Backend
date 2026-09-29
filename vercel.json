@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    { "source": "/module/:path*", "destination": "/index.html" },
+    { "source": "/cheatsheets", "destination": "/index.html" },
+    { "source": "/projects", "destination": "/index.html" },
+    { "source": "/english", "destination": "/index.html" },
+    { "source": "/interview-simulator", "destination": "/index.html" },
+    { "source": "/system-design", "destination": "/index.html" },
+    { "source": "/real-world-systems", "destination": "/index.html" },
+    { "source": "/resume-builder", "destination": "/index.html" }
+  ]
+}

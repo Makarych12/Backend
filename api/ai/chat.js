@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey.trim()}`,
-        'HTTP-Referer': 'https://backend-course.vercel.app',
+        'HTTP-Referer': 'https://backend-gold-five-42.vercel.app',
         'X-Title': 'Backend Interactive Course',
       },
       body: JSON.stringify({

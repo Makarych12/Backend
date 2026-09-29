@@ -69,12 +69,13 @@ export default function AiMentorWidget() {
   const [models, setModels] = useState([]);
   const [modelsLoading, setModelsLoading] = useState(false);
   const [modelsError, setModelsError] = useState('');
-  const chatEndRef = useRef(null);
+  const chatBodyRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
-      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      const chatBody = chatBodyRef.current;
+      if (chatBody) chatBody.scrollTop = chatBody.scrollHeight;
     }
   }, [messages, isLoading, isOpen]);
 
@@ -140,7 +141,7 @@ export default function AiMentorWidget() {
       {/* Панель чата AI-наставника */}
       {isOpen && (
         <div
-          className="fixed inset-x-0 bottom-0 z-50 flex h-[88vh] max-h-[640px] w-full flex-col overflow-hidden border shadow-2xl animate-fade-in sm:inset-x-auto sm:right-6 sm:bottom-6 sm:h-[600px] sm:w-[420px] sm:rounded-3xl"
+          className="fixed inset-x-0 bottom-0 z-50 flex h-[88dvh] max-h-[640px] w-full flex-col overflow-hidden border shadow-2xl animate-fade-in sm:inset-x-auto sm:right-6 sm:bottom-6 sm:h-[600px] sm:max-h-[calc(100dvh-3rem)] sm:w-[420px] sm:rounded-3xl"
           style={{
             background: 'var(--bg)',
             borderColor: 'var(--border)',
@@ -148,7 +149,7 @@ export default function AiMentorWidget() {
         >
           {/* Шапка панели */}
           <div
-            className="flex items-center justify-between border-b px-4 py-3"
+            className="flex shrink-0 items-center justify-between border-b px-4 py-3"
             style={{
               borderColor: 'var(--border)',
               background: 'var(--bg-secondary)',
@@ -242,12 +243,12 @@ export default function AiMentorWidget() {
           </div>
 
           {/* Описание текущей роли */}
-          <div className="border-b px-4 py-1.5 text-[11px]" style={{ borderColor: 'var(--border)', background: 'var(--bg-hover)', color: 'var(--text-secondary)' }}>
+          <div className="shrink-0 border-b px-4 py-1.5 text-[11px]" style={{ borderColor: 'var(--border)', background: 'var(--bg-hover)', color: 'var(--text-secondary)' }}>
             <span>{roleMeta.icon} <strong>{roleMeta.badge}:</strong> {roleMeta.description}</span>
           </div>
 
           {/* Тело сообщений */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div ref={chatBodyRef} className="min-h-0 flex-1 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full py-8 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-indigo-500/10 text-3xl mb-3">
@@ -326,12 +327,11 @@ export default function AiMentorWidget() {
                 <span>{roleMeta.title} думает над ответом...</span>
               </div>
             )}
-            <div ref={chatEndRef} />
           </div>
 
           {/* Быстрые чипсы над полем ввода (если уже есть сообщения) */}
           {messages.length > 0 && (
-            <div className="flex overflow-x-auto gap-1.5 px-3 py-1.5 border-t" style={{ borderColor: 'var(--border)' }}>
+            <div className="flex shrink-0 overflow-x-auto gap-1.5 px-3 py-1.5 border-t" style={{ borderColor: 'var(--border)' }}>
               {suggestions.slice(0, 2).map((sug, i) => (
                 <button
                   key={i}
@@ -346,7 +346,7 @@ export default function AiMentorWidget() {
           )}
 
           {/* Поле ввода */}
-          <form onSubmit={handleSend} className="border-t p-3" style={{ borderColor: 'var(--border)', background: 'var(--bg-secondary)' }}>
+          <form onSubmit={handleSend} className="shrink-0 border-t p-3" style={{ borderColor: 'var(--border)', background: 'var(--bg-secondary)' }}>
             <div className="flex items-center gap-2">
               <input
                 ref={inputRef}
