@@ -1,3 +1,5 @@
+import { domainDns, urlParts, requestResponse, methodsStatuses, jsonValidation, httpsBasics, httpProject } from './module4Expansion.js';
+
 export const module4 = {
   id: 'internet',
   order: 4,
@@ -56,6 +58,8 @@ export const module4 = {
       ],
     },
 
+    domainDns,
+    urlParts,
     {
       id: 'http-basics',
       title: 'HTTP: язык общения клиента и сервера',
@@ -108,6 +112,8 @@ export const module4 = {
       ],
     },
 
+    requestResponse,
+    methodsStatuses,
     {
       id: 'rest-json',
       title: 'REST и JSON',
@@ -235,5 +241,73 @@ print(type(users_json))`,
         'Могу спроектировать простой набор REST-адресов для ресурса',
       ],
     },
+    jsonValidation,
+    httpsBasics,
+    httpProject,
   ],
 };
+
+// Углубление существующих уроков без изменения их ID и сохранённого прогресса.
+const clientServerLesson = module4.lessons.find((item) => item.id === 'client-server');
+clientServerLesson.theory.unshift({ type: 'p', text: 'После урока ты сможешь назвать клиента, сервер, запрос и ответ в знакомой ситуации. В модуле ООП мы собирали логику программы; теперь посмотрим, как две программы обмениваются данными.' });
+clientServerLesson.theory.push(
+  { type: 'steps', title: 'Путь одного запроса', items: [
+    { code: 'Клиент → GET /notes', note: 'Клиент просит список заметок. GET — запрос на чтение; его подробно разберём дальше.' },
+    { code: 'Сервер → обработка', note: 'Сервер ищет данные для ответа.' },
+    { code: 'Сервер → клиент', note: 'Клиент получает ответ и показывает его человеку.' },
+  ] },
+  { type: 'callout', variant: 'info', title: 'Что дальше', text: 'Теперь понятны роли участников. Следующий урок покажет, как клиент находит адрес сервера.' },
+);
+clientServerLesson.example = {
+  title: 'Локальная модель запроса и ответа', lang: 'python',
+  code: `request = {"from": "браузер", "path": "/notes"}
+response = {"from": "сервер", "body": ["Купить книгу"]}
+print(request["from"], "просит", request["path"])
+print(response["from"], "отвечает", response["body"])`,
+  explanation: 'Словари представляют две стороны обмена. Код не делает сетевой запрос.',
+};
+clientServerLesson.sandbox = { description: 'Замени путь на /products и ответ на свой товар. Объясни, какая часть представляет клиента, а какая сервер.', initialCode: clientServerLesson.example.code };
+clientServerLesson.tasks = [
+  { title: 'Роли', difficulty: 'easy', description: 'В приложении погоды назови клиента и сервер.', hints: ['Кто просит прогноз, а кто присылает данные?'] },
+  { title: 'Прочти модель', difficulty: 'medium', description: 'Объясни две строки вывода примера без запуска, затем проверь себя.', hints: ['Смотри на значения from, path и body.'] },
+  { title: 'С нуля: обмен', difficulty: 'hard', description: 'Создай словари запроса от мобильного приложения на /orders и ответа сервера со списком двух заказов. Выведи обе стороны обмена.', hints: ['У запроса должны быть отправитель и путь, у ответа — отправитель и данные.'], solution: `request = {"from": "мобильное приложение", "path": "/orders"}
+response = {"from": "сервер", "body": [101, 102]}
+print(request["from"], request["path"])
+print(response["from"], response["body"])` },
+];
+clientServerLesson.mistakes = [
+  { wrong: 'Считать браузер сервером, потому что он показывает страницу', right: 'Браузер просит данные и показывает ответ; сервер обрабатывает запрос.' },
+  { wrong: 'Считать запрос и ответ одним сообщением', right: 'Запрос отправляет клиент, ответ возвращает сервер; данные в них различаются.' },
+];
+clientServerLesson.checklist.push('Могу разложить обмен на запрос, обработку и ответ');
+
+const httpBasicsLesson = module4.lessons.find((item) => item.id === 'http-basics');
+httpBasicsLesson.theory.unshift({ type: 'p', text: 'После урока ты сможешь выбрать HTTP-метод для действия и понять группу статусного кода. Клиент уже нашёл адрес сервера; теперь ему нужно сформулировать просьбу по общим правилам.' });
+httpBasicsLesson.theory.push(
+  { type: 'steps', title: 'Собираем действие', items: [
+    { code: 'GET /products', note: 'GET просит список товаров.' },
+    { code: 'Сервер ищет товары', note: 'Сервер выполняет обработку запроса.' },
+    { code: '200 OK', note: 'Статус ответа показывает успех.' },
+  ] },
+  { type: 'callout', variant: 'info', title: 'Что дальше', text: 'Следующий урок разберёт форму запроса и ответа: заголовки, тело и статус.' },
+);
+httpBasicsLesson.example = {
+  title: 'Модель выбора метода', lang: 'python',
+  code: `actions = {"read": "GET", "create": "POST", "delete": "DELETE"}
+for action in ["read", "create", "delete"]:
+    print(action, actions[action], "/products")`,
+  explanation: 'Модель показывает метод для действия; реальный HTTP-запрос не отправляется.',
+};
+httpBasicsLesson.sandbox = { description: 'Добавь действия полной замены и частичного изменения и подбери PUT и PATCH.', initialCode: httpBasicsLesson.example.code };
+httpBasicsLesson.tasks = [
+  { title: 'Метод', difficulty: 'easy', description: 'Какой метод используешь для чтения товара без изменения данных?', hints: ['Вспомни «получить».'] },
+  { title: 'Группа статуса', difficulty: 'medium', description: 'Объясни различие 200, 404 и 500.', hints: ['Один успех, одна проблема с ресурсом, одна ошибка сервера.'] },
+  { title: 'Исправь выбор', difficulty: 'hard', description: 'В словаре действий delete ошибочно связан с GET. Исправь, добавь update для PATCH и выведи оба метода.', hints: ['Удаление делает DELETE, частичное изменение — PATCH.'], solution: `actions = {"delete": "DELETE", "update": "PATCH"}
+print(actions["delete"])
+print(actions["update"])` },
+];
+httpBasicsLesson.mistakes = [
+  { wrong: 'Считать HTTP-метод частью URL', right: 'Метод передаётся отдельно; один путь может работать с разными методами.' },
+  { wrong: 'Считать любой статус 4xx поломкой сервера', right: '4xx сообщает о проблеме с запросом или ресурсом; 5xx — о сбое обработки на сервере.' },
+];
+httpBasicsLesson.checklist.push('Выбираю метод для чтения, создания и удаления');

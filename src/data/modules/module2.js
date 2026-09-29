@@ -1,3 +1,5 @@
+import { textToNumber, booleanLogic, accumulating, stringDetails, pythonErrors, pythonProject } from './module2Expansion.js';
+
 export const module2 = {
   id: 'python-basics',
   order: 2,
@@ -239,6 +241,7 @@ print(f"Средний балл: {average}")`,
       ],
     },
 
+    textToNumber,
     {
       id: 'conditions',
       title: 'Условия: if, elif, else',
@@ -360,6 +363,7 @@ else:
       ],
     },
 
+    booleanLogic,
     {
       id: 'loops',
       title: 'Циклы: for и while',
@@ -591,6 +595,8 @@ for number in numbers:
       ],
     },
 
+    accumulating,
+    stringDetails,
     {
       id: 'dicts',
       title: 'Словари: пары ключ-значение',
@@ -834,5 +840,7 @@ print(is_adult(10))`,
         'Понимаю разницу между print() внутри функции и return',
       ],
     },
+    pythonErrors,
+    pythonProject,
   ],
 };
