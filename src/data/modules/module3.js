@@ -1,10 +1,16 @@
+import {
+  oopIntro, oopInit, oopClassAttributes, oopEncapsulation, oopProperty,
+  oopPolymorphism, oopComposition, oopMagic, oopClassMethods, oopAbc, oopProject,
+} from './module3Expansion.js';
+
 export const module3 = {
   id: 'oop',
   order: 3,
   title: 'ООП в Python',
   icon: '🧩',
-  description: 'Классы, объекты и наследование — через понятные аналогии, без сложных слов.',
+  description: 'От первых классов до собственной модели заказа: состояние, свойства, наследование и композиция.',
   lessons: [
+    oopIntro,
     {
       id: 'classes-objects',
       title: 'Классы и объекты',
@@ -129,6 +135,7 @@ for product in products:
       ],
     },
 
+    oopInit,
     {
       id: 'methods',
       title: 'Методы — что объект умеет делать',
@@ -147,7 +154,7 @@ for product in products:
           title: 'Собираем метод по кусочкам',
           items: [
             { code: 'def bark(self):', note: 'Метод — это обычная функция внутри класса, но первый параметр всегда self (сам объект, который вызывает метод)' },
-            { code: '    return f"{self.name} говорit: Гав!"', note: 'Внутри метода можно обращаться к атрибутам ЭТОГО объекта через self.name — так метод "знает", с чьими данными работает' },
+            { code: '    return f"{self.name} говорит: Гав!"', note: 'Внутри метода можно обращаться к атрибутам ЭТОГО объекта через self.name — так метод "знает", с чьими данными работает' },
             { code: 'rex.bark()', note: 'Вызов метода: пишем объект, точку, имя метода и скобки. self передаётся автоматически — это будет rex' },
           ],
         },
@@ -266,6 +273,9 @@ print(counter.count)`,
       ],
     },
 
+    oopClassAttributes,
+    oopEncapsulation,
+    oopProperty,
     {
       id: 'inheritance',
       title: 'Наследование',
@@ -402,5 +412,11 @@ print(emp.name, emp.salary)`,
         'Понимаю, зачем нужен super().__init__()',
       ],
     },
+    oopPolymorphism,
+    oopComposition,
+    oopMagic,
+    oopClassMethods,
+    oopAbc,
+    oopProject,
   ],
 };
